@@ -1,0 +1,33 @@
+{
+  "name": "@sdkwa/whatsapp-api-client",
+  "version": "1.0.1",
+  "description": "TypeScript SDK for SDKWA WhatsApp HTTP API",
+  "main": "dist/sdkwa.js",
+  "types": "dist/sdkwa.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "test": "echo \"No tests yet\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sdkwa/sdkwa.git"
+  },
+  "keywords": [
+    "whatsapp",
+    "sdkwa",
+    "api",
+    "typescript",
+    "sdk"
+  ],
+  "author": "sdkwa",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

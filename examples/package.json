@@ -1,0 +1,16 @@
+{
+  "name": "examples",
+  "version": "1.0.0",
+  "main": "ReceiveNotifications.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@sdkwa/whatsapp-api-client": "^1.0.0"
+  },
+  "devDependencies": {},
+  "description": ""
+}
