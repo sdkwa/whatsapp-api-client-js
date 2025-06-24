@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosInstance } from 'axios';
-// Add these imports for SSL skipping
 import https from 'https';
+import { WebhookHandler, WebhookType, WebhookCallback } from './webhook-handler';
 
 export interface SDKWAOptions {
   apiHost?: string; // Make apiHost optional
@@ -96,18 +96,6 @@ export interface ErrorResponse {
   message: string;
 }
 
-type WebhookType =
-  | "stateInstanceChanged"
-  | "outgoingMessageStatus"
-  | "incomingMessageReceived_textMessage"
-  | "incomingMessageReceived_imageMessage"
-  | "incomingMessageReceived_locationMessage"
-  | "incomingMessageReceived_contactMessage"
-  | "incomingMessageReceived_extendedTextMessage"
-  | "deviceInfo";
-
-type WebhookCallback = (data: any, ...args: any[]) => void;
-
 export class SDKWA {
   private apiHost: string;
   private idInstance: string;
@@ -118,7 +106,7 @@ export class SDKWA {
   private headers: Record<string, string>;
   private axiosInstance: AxiosInstance;
 
-  private _webhookCallbacks: Map<WebhookType, WebhookCallback> = new Map();
+  public webhookHandler: WebhookHandler; // <--- Add this line
 
   constructor({ apiHost, idInstance, apiTokenInstance, userId, userToken }: SDKWAOptions) {
     // Validate required options
@@ -128,9 +116,7 @@ export class SDKWA {
     if (!apiTokenInstance || typeof apiTokenInstance !== 'string' || apiTokenInstance.trim() === '') {
       throw new Error('SDKWAOptions: apiTokenInstance is required and must be a non-empty');
     }
-    // Optional: userId and userToken are only checked in methods where needed
 
-    // Set default host if not provided
     this.apiHost = (apiHost ?? 'https://api.sdkwa.pro').replace(/\/$/, '');
     this.idInstance = idInstance;
     this.apiTokenInstance = apiTokenInstance;
@@ -141,13 +127,14 @@ export class SDKWA {
       'Authorization': `Bearer ${apiTokenInstance}`,
       'Content-Type': 'application/json'
     };
-    // Always skip SSL check
     const agent = new https.Agent({ rejectUnauthorized: false });
     this.axiosInstance = axios.create({
       baseURL: this.apiHost,
       headers: this.headers,
       httpsAgent: agent
     });
+
+    this.webhookHandler = new WebhookHandler();
   }
 
   private async _request<T>(
@@ -501,58 +488,7 @@ export class SDKWA {
     });
     return res.json();
   }
-
-  // --- Webhook registration methods ---
-  onStateInstance(callback: WebhookCallback) {
-    this._webhookCallbacks.set("stateInstanceChanged", callback);
-  }
-  onOutgoingMessageStatus(callback: WebhookCallback) {
-    this._webhookCallbacks.set("outgoingMessageStatus", callback);
-  }
-  onIncomingMessageText(callback: WebhookCallback) {
-    this._webhookCallbacks.set("incomingMessageReceived_textMessage", callback);
-  }
-  onIncomingMessageFile(callback: WebhookCallback) {
-    this._webhookCallbacks.set("incomingMessageReceived_imageMessage", callback);
-  }
-  onIncomingMessageLocation(callback: WebhookCallback) {
-    this._webhookCallbacks.set("incomingMessageReceived_locationMessage", callback);
-  }
-  onIncomingMessageContact(callback: WebhookCallback) {
-    this._webhookCallbacks.set("incomingMessageReceived_contactMessage", callback);
-  }
-  onIncomingMessageExtendedText(callback: WebhookCallback) {
-    this._webhookCallbacks.set("incomingMessageReceived_extendedTextMessage", callback);
-  }
-  onDeviceInfo(callback: WebhookCallback) {
-    this._webhookCallbacks.set("deviceInfo", callback);
-  }
-
-  /**
-   * Express middleware to handle webhook POSTs.
-   * Usage: app.post('/webhook', sdkwaInstance.webhookHandler())
-   */
-  webhookHandler() {
-    return (req: any, res: any, next: any) => {
-      try {
-        const body = req.body;
-        let webhookType: WebhookType | undefined;
-        if (body.messageData && body.messageData.typeMessage) {
-          webhookType = `${body.typeWebhook}_${body.messageData.typeMessage}` as WebhookType;
-        } else {
-          webhookType = body.typeWebhook as WebhookType;
-        }
-        const callback = this._webhookCallbacks.get(webhookType);
-        if (callback) {
-          // You can expand argument mapping as needed
-          callback(body);
-        }
-        res.send();
-      } catch (err) {
-        next(err);
-      }
-    };
-  }
 }
 
+export { WebhookHandler, WebhookType, WebhookCallback };
 export default SDKWA;
