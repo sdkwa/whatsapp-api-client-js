@@ -30,7 +30,7 @@ npm install @sdkwa/whatsapp-api-client
 ```html
 <script src="https://unpkg.com/@sdkwa/whatsapp-api-client/lib/whatsapp-api-client.browser.js"></script>
 <script>
-  const sdkwa = new window.SDKWA({
+  const sdkwa = new SDKWA({
     idInstance: "YOUR_ID_INSTANCE",
     apiTokenInstance: "YOUR_API_TOKEN_INSTANCE"
   });
@@ -50,7 +50,6 @@ npm install @sdkwa/whatsapp-api-client
 import SDKWA from "@sdkwa/whatsapp-api-client";
 
 const sdkwa = new SDKWA({
-  apiHost: "https://api.sdkwa.pro",
   idInstance: "YOUR_ID_INSTANCE",
   apiTokenInstance: "YOUR_API_TOKEN_INSTANCE"
 });
