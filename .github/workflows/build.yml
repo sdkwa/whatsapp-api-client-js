@@ -3,9 +3,9 @@ name: build library
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
   repository_dispatch:
@@ -21,8 +21,8 @@ jobs:
         id: checkout-repo
         uses: actions/checkout@v2
         with:
-          repository: sdkwa/whatsapp-api-client
-          path: whatsapp-api-client
+          repository: sdkwa/whatsapp-api-client-js
+          path: whatsapp-api-client-js
           fetch-depth: 100
       # Installing nodejs
       -
@@ -34,12 +34,12 @@ jobs:
       - 
         name: Install dependencies
         run: |
-            cd whatsapp-api-client
+            cd whatsapp-api-client-js
             npm install
             npm install -g rollup
       # Building nodejs and browser libraries
       - 
         name: Building the libraries
         run: |
-          cd whatsapp-api-client
+          cd whatsapp-api-client-js
           npm run build
