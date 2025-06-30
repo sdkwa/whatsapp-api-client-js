@@ -127,12 +127,21 @@ class SDKWA {
       'Authorization': `Bearer ${apiTokenInstance}`,
       'Content-Type': 'application/json'
     };
-    const agent = new https.Agent({ rejectUnauthorized: false });
-    this.axiosInstance = axios.create({
-      baseURL: this.apiHost,
-      headers: this.headers,
-      httpsAgent: agent
-    });
+
+    if (https) {
+      // browser don't have https module, so we check if it exists
+      const agent = new https.Agent({ rejectUnauthorized: false });
+      this.axiosInstance = axios.create({
+        baseURL: this.apiHost,
+        headers: this.headers,
+        httpsAgent: agent
+      });
+    } else {
+      this.axiosInstance = axios.create({
+        baseURL: this.apiHost,
+        headers: this.headers,
+      });
+    }
 
     this.webhookHandler = new WebhookHandler();
   }

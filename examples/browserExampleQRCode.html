@@ -1,143 +1,136 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
-    <meta content="utf-8" http-equiv="encoding">
+    <meta charset="UTF-8">
+    <title>WhatsApp QR Code Example</title>
     <style>
         .button {
             border: none;
             color: white;
             padding: 16px 32px;
             text-align: center;
-            text-decoration: none;
-            display: inline-block;
             font-size: 16px;
             margin: 4px 2px;
-            transition-duration: 0.4s;
             cursor: pointer;
+            border-radius: 4px;
         }
-
         .buttonGreen {
             background-color: white;
             color: black;
             border: 2px solid blue;
         }
-
         .buttonGreen:hover {
             background-color: blue;
             color: white;
         }
+        form label, form input {
+            display: block;
+            margin-bottom: 8px;
+        }
+        form input {
+            width: 250px;
+            padding: 4px;
+        }
+        #img-qr-code {
+            margin-top: 16px;
+            max-width: 250px;
+            border: 1px solid #ccc;
+        }
     </style>
 </head>
-
 <body>
-
-    <h1>WhatsApp client browser example</h1>
-
-    <form>
-        <label for="idInstance">Id Instance:</label><br>
-        <input required type="text" id="idInstance" name="idInstance"><br>
-        <label for="apiTokenIsntance">API Token:</label><br>
-        <input required type="text" id="apiTokenIsntance" name="apiTokenIsntance"><br>
+    <h1>WhatsApp client browser QR example</h1>
+    <form id="qrForm" onsubmit="return false;">
+        <label for="idInstance">Id Instance:</label>
+        <input required type="text" id="idInstance" name="idInstance">
+        <label for="apiTokenInstance">API Token:</label>
+        <input required type="text" id="apiTokenInstance" name="apiTokenInstance">
+        <button id="getQrBtn" class="button buttonGreen" type="button">Get QR</button>
+        <button id="logoutQrBtn" class="button buttonGreen" type="button" style="display:none;">Logout</button>
     </form>
 
     <p style="color:blue" id="statusText"></p>
     <p style="color:blue" id="resultText"></p>
-    <p>Press button to get qr code</p>
-    <div style="display:grid; width: 20%">
-        <button id="getQrBtn" class="button buttonGreen">Get QR</button>
-        <button style="display: none" hidden id="logoutQrBtn" class="button buttonGreen">Logout</button>
-        <img hidden id="img-qr-code" alt="QR-Code" class="sb-qr-wizard-qr-code" aria-hidden="false" src="data:image/png;base64,%QR_DATA%" style="">
-    </div>
-    <script type="text/javascript" src="https://unpkg.com/@basisapi/whatsapp-api-client/lib/whatsapp-api-client.min.js"></script>
+    <img hidden id="img-qr-code" alt="QR-Code" src="">
+
+    <script src="https://unpkg.com/@sdkwa/whatsapp-api-client/lib/whatsapp-api-client.browser.js"></script>
     <script>
-        var intervalId = null
-        const qrCodeElement = document.getElementById("img-qr-code")
-        const qrTempalte = qrCodeElement.getAttribute('src');
-        
-        document.getElementById("getQrBtn").addEventListener("click", function () {
-            try {
-                isAuthed();
-                clearInterval(intervalId)
-                updateQRCode()
-                intervalId = setInterval(updateQRCode, 5000);
-                
-            } catch (reason) {
-                console.error(reason);
-                document.getElementById("resultText").innerHTML = reason + ". See logs for details";
-            }
-        });
+        let intervalId = null;
+        const qrCodeElement = document.getElementById("img-qr-code");
+        const getQrBtn = document.getElementById("getQrBtn");
+        const logoutQrBtn = document.getElementById("logoutQrBtn");
 
-        document.getElementById("logoutQrBtn").addEventListener("click", function () {
-            try {
-                const restAPI = whatsAppClient.restAPI(({
-                    host: "https://ru-api.basis-api.com",
-                    idInstance: document.getElementById("idInstance").value,
-                    apiTokenInstance: document.getElementById("apiTokenIsntance").value
-                }))
-                
-                restAPI.instance.logout()
-                    .then((data) => {
-                        document.getElementById("resultText").innerHTML = "isLogout=" + data.isLogout
-                        isAuthed();
-                    }).catch((reason) => {
-                        console.error(reason);
-                        document.getElementById("resultText").innerHTML = reason + ". See logs for details";
-                    });
-            } catch (reason) {
-                console.error(reason);
-                document.getElementById("resultText").innerHTML = reason + ". See logs for details";
-            }
-        });
-
-        function updateQRCode() {
-            const restAPI = whatsAppClient.restAPI(({
-                host: "https://ru-api.basis-api.com",
+        function getSdkwaInstance() {
+            return new SDKWA({
                 idInstance: document.getElementById("idInstance").value,
-                apiTokenInstance: document.getElementById("apiTokenIsntance").value
-            }))
-            restAPI.instance.qr()
-                .then((data) => {
-                    console.log(data);
-                    document.getElementById("resultText").innerHTML = "";
-                    if (data.type === 'qrCode') {
-                        qrCodeElement.hidden = false;
-                        qrCodeElement.setAttribute('src', qrTempalte.replace("%QR_DATA%", data.message))
-                    } else {
-                        qrCodeElement.hidden = true;
-                        clearInterval(intervalId)
-                        isAuthed();
-                        document.getElementById("resultText").innerHTML = data.message
-                    }
-                }).catch((reason) => {
-                    console.error(reason);
-                    document.getElementById("resultText").innerHTML = reason + ". See logs for details";
-                });
+                apiTokenInstance: document.getElementById("apiTokenInstance").value
+            });
         }
 
-        function isAuthed() {
-            const restAPI = whatsAppClient.restAPI(({
-                    host: "https://ru-api.basis-api.com",
-                    idInstance: document.getElementById("idInstance").value,
-                    apiTokenInstance: document.getElementById("apiTokenIsntance").value
-                }))
-            restAPI.instance.getStateInstance().then(data => {
-                document.getElementById("statusText").innerHTML = data.stateInstance;
-                
-                if (data.stateInstance === 'authorized') {
-                    document.getElementById("getQrBtn").style.display = "none"
-                    document.getElementById("logoutQrBtn").style.display = "block"
+        async function updateQRCode() {
+            const sdkwa = getSdkwaInstance();
+            try {
+                const data = await sdkwa.getQr();
+                document.getElementById("resultText").textContent = "";
+                if (data.type === 'qrCode') {
+                    qrCodeElement.hidden = false;
+                    qrCodeElement.src = "data:image/png;base64," + data.message;
                 } else {
-                    document.getElementById("getQrBtn").style.display = "block"
-                    document.getElementById("logoutQrBtn").style.display = "none"
+                    qrCodeElement.hidden = true;
+                    clearInterval(intervalId);
+                    await isAuthed();
+                    document.getElementById("resultText").textContent = data.message;
                 }
-                 
-                
-            })
+            } catch (reason) {
+                console.error(reason);
+                document.getElementById("resultText").textContent = reason + ". See logs for details";
+            }
         }
+
+        async function isAuthed() {
+            const sdkwa = getSdkwaInstance();
+            try {
+                const data = await sdkwa.getStateInstance();
+                document.getElementById("statusText").textContent = data.stateInstance;
+                if (data.stateInstance === 'authorized') {
+                    getQrBtn.style.display = "none";
+                    logoutQrBtn.style.display = "inline-block";
+                } else {
+                    getQrBtn.style.display = "inline-block";
+                    logoutQrBtn.style.display = "none";
+                }
+            } catch (reason) {
+                console.error(reason);
+                document.getElementById("statusText").textContent = "Error: " + reason;
+            }
+        }
+
+        getQrBtn.addEventListener("click", async function () {
+            try {
+                await isAuthed();
+                clearInterval(intervalId);
+                await updateQRCode();
+                intervalId = setInterval(updateQRCode, 5000);
+            } catch (reason) {
+                console.error(reason);
+                document.getElementById("resultText").textContent = reason + ". See logs for details";
+            }
+        });
+
+        logoutQrBtn.addEventListener("click", async function () {
+            try {
+                const sdkwa = getSdkwaInstance();
+                const data = await sdkwa.logout();
+                document.getElementById("resultText").textContent = "isLogout=" + data.isLogout;
+                await isAuthed();
+            } catch (reason) {
+                console.error(reason);
+                document.getElementById("resultText").textContent = reason + ". See logs for details";
+            }
+        });
+
+        // Initial state check
+        isAuthed();
     </script>
-
 </body>
-
 </html>

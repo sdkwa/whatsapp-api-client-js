@@ -1,149 +1,156 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
-    <meta content="utf-8" http-equiv="encoding">
+    <meta charset="UTF-8">
+    <title>WhatsApp QR Code WebSocket Example</title>
     <style>
         .button {
             border: none;
             color: white;
             padding: 16px 32px;
             text-align: center;
-            text-decoration: none;
-            display: inline-block;
             font-size: 16px;
             margin: 4px 2px;
-            transition-duration: 0.4s;
             cursor: pointer;
+            border-radius: 4px;
         }
-
         .buttonGreen {
             background-color: white;
             color: black;
             border: 2px solid blue;
         }
-
         .buttonGreen:hover {
             background-color: blue;
             color: white;
         }
+        form label, form input {
+            display: block;
+            margin-bottom: 8px;
+        }
+        form input {
+            width: 250px;
+            padding: 4px;
+        }
+        #img-qr-code {
+            margin-top: 16px;
+            max-width: 250px;
+            border: 1px solid #ccc;
+        }
+        .qr-controls {
+            display: grid;
+            width: 20%;
+        }
     </style>
 </head>
-
 <body>
-
-    <h1>WhatsApp client browser example</h1>
-
-    <form>
-        <label for="idInstance">Id Instance:</label><br>
-        <input required type="text" id="idInstance" name="idInstance"><br>
-        <label for="apiTokenIsntance">API Token:</label><br>
-        <input required type="text" id="apiTokenIsntance" name="apiTokenIsntance"><br>
+    <h1>WhatsApp client browser QR WebSocket example</h1>
+    <form id="qrForm" onsubmit="return false;">
+        <label for="idInstance">Id Instance:</label>
+        <input required type="text" id="idInstance" name="idInstance">
+        <label for="apiTokenInstance">API Token:</label>
+        <input required type="text" id="apiTokenInstance" name="apiTokenInstance">
     </form>
 
     <p style="color:blue" id="statusText"></p>
     <p style="color:blue" id="resultText"></p>
-    <p>Press button to get qr code</p>
-    <div style="display:grid; width: 20%">
-        <button id="getQrBtn" class="button buttonGreen">Get QR</button>
-        <button style="display: none" hidden id="logoutQrBtn" class="button buttonGreen">Logout</button>
-        <img hidden id="img-qr-code" alt="QR-Code" class="sb-qr-wizard-qr-code" aria-hidden="false" src="data:image/png;base64,%QR_DATA%" style="">
+    <p>Press button to get QR code</p>
+    <div class="qr-controls">
+        <button id="getQrBtn" class="button buttonGreen" type="button">Get QR</button>
+        <button style="display: none" id="logoutQrBtn" class="button buttonGreen" type="button">Logout</button>
+        <img hidden id="img-qr-code" alt="QR-Code" src="">
     </div>
-    <script type="text/javascript" src="https://unpkg.com/@basisapi/whatsapp-api-client/lib/whatsapp-api-client.min.js"></script>
+    <script src="https://unpkg.com/@sdkwa/whatsapp-api-client/lib/whatsapp-api-client.browser.js"></script>
     <script>
-        const qrCodeElement = document.getElementById("img-qr-code")
-        const qrTempalte = qrCodeElement.getAttribute('src');
-        
-        document.getElementById("getQrBtn").addEventListener("click", function () {
-            try {
-                isAuthed();
-                updateQRCode()
-                
-            } catch (reason) {
-                console.error(reason);
-                document.getElementById("resultText").innerHTML = reason + ". See logs for details";
-            }
-        });
+        const qrCodeElement = document.getElementById("img-qr-code");
+        const getQrBtn = document.getElementById("getQrBtn");
+        const logoutQrBtn = document.getElementById("logoutQrBtn");
 
-        document.getElementById("logoutQrBtn").addEventListener("click", function () {
-            try {
-                const restAPI = whatsAppClient.restAPI(({
-                    host: 'http://lcoalhost:6001',
-                    idInstance: document.getElementById("idInstance").value,
-                    apiTokenInstance: document.getElementById("apiTokenIsntance").value
-                }))
-                
-                restAPI.instance.logout()
-                    .then((data) => {
-                        document.getElementById("resultText").innerHTML = "isLogout=" + data.isLogout
-                        isAuthed();
-                    }).catch((reason) => {
-                        console.error(reason);
-                        document.getElementById("resultText").innerHTML = reason + ". See logs for details";
-                    });
-            } catch (reason) {
-                console.error(reason);
-                document.getElementById("resultText").innerHTML = reason + ". See logs for details";
-            }
-        });
+        function getIdInstance() {
+            return document.getElementById("idInstance").value;
+        }
+        function getApiTokenInstance() {
+            return document.getElementById("apiTokenInstance").value;
+        }
 
         function updateQRCode() {
-            const ws = new WebSocket(`ws://localhost:6001/waInstance${document.getElementById("idInstance").value}/scanqrcode/${document.getElementById("apiTokenIsntance").value}`);
+            const ws = new WebSocket(`wss://api.sdkwa.pro/whatsapp/${getIdInstance()}/scanqrcode/${getApiTokenInstance()}`);
+
+            getQrBtn.disabled = true;
 
             ws.onopen = () => {
-                document.getElementById("getQrBtn").setAttribute('disabled', true)
-                console.log("websocket is open")
+                console.log("WebSocket is open");
             };
 
-            ws.onmessage = (response) => { 
-                const data = JSON.parse(response.data)
+            ws.onmessage = (response) => {
+                const data = JSON.parse(response.data);
                 console.log(data);
-                document.getElementById("resultText").innerHTML = "";
+                document.getElementById("resultText").textContent = "";
                 if (data.type === 'qrCode') {
                     qrCodeElement.hidden = false;
-                    qrCodeElement.setAttribute('src', qrTempalte.replace("%QR_DATA%", data.message))
+                    qrCodeElement.src = "data:image/png;base64," + data.message;
                 } else {
                     qrCodeElement.hidden = true;
                     isAuthed();
-                    ws.close()
-                    document.getElementById("resultText").innerHTML = data.message
+                    ws.close();
+                    document.getElementById("resultText").textContent = data.message;
                 }
             };
-            ws.onerror = (response) => {
-                console.error(reason);
-                document.getElementById("resultText").innerHTML = reason + ". See logs for details";
-                ws.close()
+
+            ws.onerror = (event) => {
+                console.error(event);
+                document.getElementById("resultText").textContent = "WebSocket error. See logs for details";
+                ws.close();
             };
 
             ws.onclose = () => {
-                document.getElementById("getQrBtn").removeAttribute('disabled')
-                console.log(`websocket closed`)
+                getQrBtn.disabled = false;
+                console.log("WebSocket closed");
             };
         }
 
-        function isAuthed() {
-            const restAPI = whatsAppClient.restAPI(({
-                    host: 'http://lcoalhost:6001',
-                    idInstance: document.getElementById("idInstance").value,
-                    apiTokenInstance: document.getElementById("apiTokenIsntance").value
-                }))
-            restAPI.instance.getStateInstance().then(data => {
-                document.getElementById("statusText").innerHTML = data.stateInstance;
-                
+        async function isAuthed() {
+            try {
+                const restAPI = new window.SDKWA({
+                    idInstance: getIdInstance(),
+                    apiTokenInstance: getApiTokenInstance()
+                });
+                const data = await restAPI.getStateInstance();
+                document.getElementById("statusText").textContent = data.stateInstance;
                 if (data.stateInstance === 'authorized') {
-                    document.getElementById("getQrBtn").style.display = "none"
-                    document.getElementById("logoutQrBtn").style.display = "block"
+                    getQrBtn.style.display = "none";
+                    logoutQrBtn.style.display = "block";
                 } else {
-                    document.getElementById("getQrBtn").style.display = "block"
-                    document.getElementById("logoutQrBtn").style.display = "none"
+                    getQrBtn.style.display = "block";
+                    logoutQrBtn.style.display = "none";
                 }
-                 
-                
-            })
+            } catch (reason) {
+                console.error(reason);
+                document.getElementById("statusText").textContent = "Error: " + reason;
+            }
         }
+
+        getQrBtn.addEventListener("click", function () {
+            isAuthed();
+            updateQRCode();
+        });
+
+        logoutQrBtn.addEventListener("click", async function () {
+            try {
+                const restAPI = new window.SDKWA({
+                    idInstance: getIdInstance(),
+                    apiTokenInstance: getApiTokenInstance()
+                });
+                const data = await restAPI.logout();
+                document.getElementById("resultText").textContent = "isLogout=" + data.isLogout;
+                isAuthed();
+            } catch (reason) {
+                console.error(reason);
+                document.getElementById("resultText").textContent = reason + ". See logs for details";
+            }
+        });
+
+        // Initial state check
+        isAuthed();
     </script>
-
 </body>
-
 </html>

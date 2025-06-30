@@ -9,10 +9,10 @@ export default {
   input: "src/sdkwa.ts",
   output: [
     {
-      file: "lib/sdkwa.min.js",
+      file: "lib/whatsapp-api-client.browser.js",
       format: "umd",
       exports: "default",
-      name: "whatsAppClient",
+      name: "SDKWA",
       plugins: [terser()],
       globals: {
         fs: "fs",

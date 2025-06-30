@@ -51,10 +51,10 @@
     <p>To get API Token and ID Instance please visit <a href="https://sdkwa.pro" target="_blank">sdkwa.pro</a></p>
     <p style="color:blue" id="resultText"></p>
 
-    <script src="https://unpkg.com/@sdkwa/whatsapp-api-client/dist/whatsapp-api-client.browser.min.js"></script>
+    <script src="https://unpkg.com/@sdkwa/whatsapp-api-client/lib/whatsapp-api-client.browser.js"></script>
     <script>
         function getSdkwaInstance() {
-            return new window.SDKWA({
+            return new SDKWA({
                 idInstance: document.getElementById("idInstance").value,
                 apiTokenInstance: document.getElementById("apiTokenInstance").value
             });
