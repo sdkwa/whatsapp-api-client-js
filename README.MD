@@ -1,6 +1,6 @@
 # SDKWA WhatsApp API Client for JavaScript
 
-[![build](https://github.com/sdkwa/whatsapp-api-client-js/actions/workflows/build_library.yml/badge.svg)](https://github.com/sdkwa/whatsapp-api-client-js/actions/workflows/build_library.yml)
+[![build](https://github.com/sdkwa/whatsapp-api-client-js/actions/workflows/build.yml/badge.svg)](https://github.com/sdkwa/whatsapp-api-client-js/actions/workflows/build.yml)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/sdkwa/whatsapp-api-client-js/blob/master/LICENSE)
 [![npm version](https://badge.fury.io/js/@sdkwa%2Fwhatsapp-api-client.svg)](https://www.npmjs.com/package/@sdkwa/whatsapp-api-client)
 
