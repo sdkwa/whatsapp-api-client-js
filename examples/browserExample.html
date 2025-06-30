@@ -1,109 +1,98 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
-    <meta content="utf-8" http-equiv="encoding">
+    <meta charset="UTF-8">
+    <title>WhatsApp Client Browser Example</title>
     <style>
         .button {
             border: none;
             color: white;
-            padding: 16px 32px;
+            padding: 12px 24px;
             text-align: center;
-            text-decoration: none;
-            display: inline-block;
             font-size: 16px;
-            margin: 4px 2px;
-            transition-duration: 0.4s;
+            margin: 8px 4px;
             cursor: pointer;
+            border-radius: 4px;
         }
-
         .buttonGreen {
-            background-color: white;
-            color: black;
-            border: 2px solid #4CAF50;
-        }
-
-        .buttonGreen:hover {
-            background-color: #4CAF50;
+            background-color: blue;
             color: white;
+            border: 2px solid blue;
+        }
+        .buttonGreen:hover {
+            background-color: white;
+            color: blue;
+        }
+        form label, form input {
+            display: block;
+            margin-bottom: 8px;
+        }
+        form input {
+            width: 250px;
+            padding: 4px;
         }
     </style>
 </head>
-
 <body>
-
     <h1>WhatsApp client browser example</h1>
-
-    <form>
-        <label for="idInstance">Id Instance:</label><br>
-        <input required type="text" id="idInstance" name="idInstance"><br>
-        <label for="apiTokenIsntance">API Token:</label><br>
-        <input required type="text" id="apiTokenIsntance" name="apiTokenIsntance"><br>
-        <label for="phoneNumber">Phone Number:</label><br>
-        <input required type="tel" id="phoneNumber" name="phoneNumber" value=""><br>
-        <label for="messageText">Message:</label><br>
-        <input required type="text" id="messageText" name="messageText" value="Hello world!"><br>
+    <form id="waForm" onsubmit="return false;">
+        <label for="idInstance">Id Instance:</label>
+        <input required type="text" id="idInstance" name="idInstance">
+        <label for="apiTokenInstance">API Token:</label>
+        <input required type="text" id="apiTokenInstance" name="apiTokenInstance">
+        <label for="phoneNumber">Phone Number:</label>
+        <input required type="tel" id="phoneNumber" name="phoneNumber" placeholder="79999999999">
+        <label for="messageText">Message:</label>
+        <input required type="text" id="messageText" name="messageText" value="Hello world!">
+        <button id="SendWhatsAppBtn" class="button buttonGreen" type="button">Send Message</button>
+        <button id="ReceiveWhatsAppBtn" class="button buttonGreen" type="button">Receive Message</button>
     </form>
 
-    <p>To get API Token and ID Instance please visit <a href="https://basis-api.com">basis-api.com</a></p>
-    <p>Press Send Message button to dispatch hello world to phone</p>
+    <p>To get API Token and ID Instance please visit <a href="https://sdkwa.pro" target="_blank">sdkwa.pro</a></p>
     <p style="color:blue" id="resultText"></p>
 
-    <button id="SendWhatsAppBtn" class="button buttonGreen">Send Message</button>
-    <button id="ReceiveWhatsAppBtn" class="button buttonGreen">Receive message</button>
-    <script type="text/javascript" src="https://unpkg.com/@basisapi/whatsapp-api-client/lib/whatsapp-api-client.min.js"></script>
+    <script src="https://unpkg.com/@sdkwa/whatsapp-api-client/dist/whatsapp-api-client.browser.min.js"></script>
     <script>
-        document.getElementById("SendWhatsAppBtn").addEventListener("click", function () {
+        function getSdkwaInstance() {
+            return new window.SDKWA({
+                idInstance: document.getElementById("idInstance").value,
+                apiTokenInstance: document.getElementById("apiTokenInstance").value
+            });
+        }
+
+        document.getElementById("SendWhatsAppBtn").addEventListener("click", async function () {
+            const sdkwa = getSdkwaInstance();
+            const chatId = document.getElementById("phoneNumber").value.trim() + "@c.us";
+            const message = document.getElementById("messageText").value;
+            document.getElementById("resultText").textContent = "Sending...";
             try {
-                const restAPI = whatsAppClient.restAPI(({
-                    idInstance: document.getElementById("idInstance").value,
-                    apiTokenInstance: document.getElementById("apiTokenIsntance").value
-                }))
-                restAPI.message.sendMessage(`${document.getElementById("phoneNumber").value}@c.us`, null, document.getElementById("messageText").value)
-                .then((data) => {
-                    console.log(data);
-                    document.getElementById("resultText").innerHTML = "Message was sent successfully. Message id: " + data.idMessage;
-                }).catch((reason) =>{
-                    console.error(reason);
-                    document.getElementById("resultText").innerHTML = "Message was not sent. Reason: " + reason + ". See logs for details";
-                });
+                const data = await sdkwa.sendMessage({ chatId, message });
+                console.log(data);
+                document.getElementById("resultText").textContent = "Message was sent successfully. Message id: " + data.idMessage;
             } catch (reason) {
                 console.error(reason);
-                document.getElementById("resultText").innerHTML = "Message was not sent. Reason: " + reason + " See logs for details";
+                document.getElementById("resultText").textContent = "Message was not sent. Reason: " + reason + ". See logs for details";
             }
         });
 
-        document.getElementById("ReceiveWhatsAppBtn").addEventListener("click", function () {
+        document.getElementById("ReceiveWhatsAppBtn").addEventListener("click", async function () {
+            const sdkwa = getSdkwaInstance();
+            document.getElementById("resultText").textContent = "Receiving...";
             try {
-                const restAPI = whatsAppClient.restAPI(({
-                    idInstance: document.getElementById("idInstance").value,
-                    apiTokenInstance: document.getElementById("apiTokenIsntance").value
-                }))
-
-                restAPI.webhookService.receiveNotification()
-                .then((data) => {
-                    console.log(data);
-                    if (data.receiptId) {
-                        restAPI.webhookService.deleteNotification(data.receiptId)
-                        .then(() => {
-                            document.getElementById("resultText").innerHTML = "Message was received successfully. Message text: " + JSON.stringify(data.body);
-                        }).catch(reason => {
-                            console.error(reason);
-                            document.getElementById("resultText").innerHTML = "Message was not confirmed. Reason: " + reason + ". See logs for details";
-                        })
-                    }
-                }).catch((reason) =>{
-                    console.error(reason);
-                    document.getElementById("resultText").innerHTML = "Message was not received. Reason: " + reason + ". See logs for details";
-                });
+                const data = await sdkwa.receiveNotification();
+                console.log(data);
+                if (data && data.receiptId) {
+                    await sdkwa.deleteNotification(data.receiptId);
+                    document.getElementById("resultText").textContent =
+                        "Message was received successfully. Message text: " + JSON.stringify(data.body);
+                } else {
+                    document.getElementById("resultText").textContent = "No new messages.";
+                }
             } catch (reason) {
                 console.error(reason);
-                document.getElementById("resultText").innerHTML = "Message was not received. Reason: " + reason + " See logs for details";
+                document.getElementById("resultText").textContent = "Message was not received. Reason: " + reason + ". See logs for details";
             }
         });
     </script>
-
 </body>
-
 </html>

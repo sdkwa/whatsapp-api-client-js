@@ -1,11 +1,13 @@
 {
   "name": "@sdkwa/whatsapp-api-client",
-  "version": "1.0.9",
+  "version": "1.0.12",
   "description": "TypeScript SDK for SDKWA WhatsApp HTTP API",
   "main": "dist/sdkwa.js",
   "types": "dist/sdkwa.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run tsc && npm run buildBrowser",
+    "tsc": "tsc",
+    "buildBrowser": "rollup --config rollup.config.browser.mjs --environment BUILD:production",
     "prepare": "npm run build",
     "test": "echo \"No tests yet\""
   },
@@ -20,13 +22,25 @@
     "typescript",
     "sdk"
   ],
-  "author": "sdkwa",
+  "author": "community",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.10.0"
   },
+  "files": [
+    "lib",
+    "dist"
+  ],
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.4",
     "@types/node": "^20.0.0",
+    "rollup": "^4.44.1",
+    "rollup-plugin-progress": "^1.1.2",
+    "tslib": "^2.8.1",
     "typescript": "^5.0.0"
   }
 }

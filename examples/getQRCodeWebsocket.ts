@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
  
 dotenv.config()
 
-const ws = new WebSocket(`wss://ru-api.basis-api.com/waInstance${process.env.ID_INSTANCE}/scanqrcode/${process.env.API_TOKEN_INSTANCE}`);
+const ws = new WebSocket(`wss://api.sdkwa.pro/whatsapp/${process.env.ID_INSTANCE}/scanqrcode/${process.env.API_TOKEN_INSTANCE}`);
 
 ws.on('open', () => {
     console.log("websocket is open")

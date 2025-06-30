@@ -96,7 +96,7 @@ export interface ErrorResponse {
   message: string;
 }
 
-export class SDKWA {
+class SDKWA {
   private apiHost: string;
   private idInstance: string;
   private apiTokenInstance: string;
@@ -106,7 +106,7 @@ export class SDKWA {
   private headers: Record<string, string>;
   private axiosInstance: AxiosInstance;
 
-  public webhookHandler: WebhookHandler; // <--- Add this line
+  public webhookHandler: WebhookHandler;
 
   constructor({ apiHost, idInstance, apiTokenInstance, userId, userToken }: SDKWAOptions) {
     // Validate required options
@@ -490,5 +490,4 @@ export class SDKWA {
   }
 }
 
-export { WebhookHandler, WebhookType, WebhookCallback };
 export default SDKWA;
