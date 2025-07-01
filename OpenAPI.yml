@@ -1,0 +1,3634 @@
+openapi: 3.0.0
+info:
+  title: SDK WA
+  version: 1.0.0
+servers:
+  - url: http://api.sdkwa.pro
+components:
+  parameters:
+    XUserIdHeader:
+      name: x-user-id
+      in: header
+      required: true
+      schema:
+        type: string
+      description: >
+        The `x-user-id` header specifies the unique user identifier required for authenticating API requests. You can find your user ID in the Account Access Settings section of your Personal Account on the [Profile](https://cabinet.sdkwa.pro/changePassword) page. This header must be included in all requests that require user authentication.
+    XUserTokenHeader:
+      name: x-user-token
+      in: header
+      required: true
+      schema:
+        type: string
+      description: >
+        The `x-user-token` header provides the account access key required for authenticating API requests. You can find your user token in the Account Access Settings section of your Personal Account on the [Profile](https://cabinet.sdkwa.pro/changePassword) page. This header must be included in all requests that require user authentication.
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        Pass the required `apiTokenInstance` parameter in the Authorization header as a Bearer token.
+        Example: `Authorization: Bearer <apiTokenInstance>`
+security:
+  - bearerAuth: []
+tags:
+  - name: Account
+  - name: Sending
+  - name: Receiving
+  - name: Journals
+  - name: Queues
+  - name: Groups
+  - name: Read mark
+  - name: Service methods
+  - name: instances management
+paths:
+  /whatsapp/{idInstance}/getSettings:
+    get:
+      tags:
+        - Account
+      summary: Get current account settings
+      description: >
+        This method retrieves the current settings for the specified account instance, including webhook configuration, message delay, and notification preferences.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      responses:
+        '200':
+          description: Current account settings.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  wid:
+                    type: string
+                    description: Account ID in WhatsApp.
+                  countryInstance:
+                    type: string
+                    description: Account country code (ISO 3166-2).
+                  typeAccount:
+                    type: string
+                    description: Account type (e.g., WA_DESKTOP, WA_MOBILE).
+                  releaseType:
+                    type: string
+                    description: Release type (e.g., STABLE, LATEST).
+                  webhookUrl:
+                    type: string
+                    description: URL to receive incoming notifications.
+                  webhookUrlToken:
+                    type: string
+                    description: Token for connecting to your webhook server.
+                  delaySendMessagesMilliseconds:
+                    type: integer
+                    description: Minimum message sending delay in milliseconds.
+                  delaySendMessagesMaxMs:
+                    type: integer
+                    description: Maximum message sending delay in milliseconds.
+                  markIncomingMessagesReaded:
+                    type: string
+                    description: Mark incoming messages as read ("yes" or "no").
+                  markIncomingMessagesReadedOnReply:
+                    type: string
+                    description: Mark incoming messages as read when replying via API ("yes" or "no").
+                  outgoingWebhook:
+                    type: string
+                    description: Notifications for outgoing message status ("yes" or "no").
+                  outgoingMessageWebhook:
+                    type: string
+                    description: Notifications for messages sent from phone ("yes" or "no").
+                  stateWebhook:
+                    type: string
+                    description: Notifications for account authorization status changes ("yes" or "no").
+                  incomingWebhook:
+                    type: string
+                    description: Notifications for incoming messages and files ("yes" or "no").
+                  deviceWebhook:
+                    type: string
+                    description: Notifications about device and battery level ("yes" or "no").
+                  statusInstanceWebhook:
+                    type: string
+                    description: Notifications about account socket connection status changes ("yes" or "no").
+                  sendFromUTC:
+                    type: string
+                    description: Time to start sending messages (UTC).
+                  sendToUTC:
+                    type: string
+                    description: Time to stop sending messages (UTC).
+              example:
+                wid: "11001234567@c.us"
+                countryInstance: "ru"
+                typeAccount: "vip"
+                webhookUrl: "https://mysite.com/webhook/sdkwa.pro/"
+                webhookUrlToken: ""
+                delaySendMessagesMilliseconds: 3000
+                markIncomingMessagesReaded: "yes"
+                markIncomingMessagesReadedOnReply: "no"
+                outgoingWebhook: "yes"
+                outgoingMessageWebhook: "yes"
+                stateWebhook: "yes"
+                incomingWebhook: "yes"
+                deviceWebhook: "no"
+                statusInstanceWebhook: "yes"
+                sendFromUTC: "12:00"
+                sendToUTC: "18:00"
+  /whatsapp/{idInstance}/setSettings:
+    post:
+      tags:
+        - Account
+      summary: Set account settings
+      description: >
+        This method updates the account settings for the specified instance. When this method is called, the account is rebooted. You can specify any combination of settings parameters; at least one parameter must be provided.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                countryInstance:
+                  type: string
+                  description: Account country code (ISO 3166-2).
+                webhookUrl:
+                  type: string
+                  description: URL for sending notifications. Use an empty string to disable notifications.
+                webhookUrlToken:
+                  type: string
+                  description: Token to access your notification server, or empty string if not required.
+                delaySendMessagesMilliseconds:
+                  type: integer
+                  description: Minimum message sending delay in milliseconds.
+                delaySendMessagesMaxMs:
+                  type: integer
+                  description: Maximum message sending delay in milliseconds.
+                markIncomingMessagesReaded:
+                  type: string
+                  description: Mark incoming messages as read ("yes" or "no").
+                markIncomingMessagesReadedOnReply:
+                  type: string
+                  description: Mark incoming messages as read when replying via API ("yes" or "no").
+                outgoingWebhook:
+                  type: string
+                  description: Notifications for outgoing message status ("yes" or "no").
+                outgoingMessageWebhook:
+                  type: string
+                  description: Notifications for messages sent from phone ("yes" or "no").
+                outgoingAPIMessageWebhook:
+                  type: string
+                  description: Notifications for messages sent from API ("yes" or "no").
+                stateWebhook:
+                  type: string
+                  description: Notifications for account authorization status changes ("yes" or "no").
+                incomingWebhook:
+                  type: string
+                  description: Notifications for incoming messages and files ("yes" or "no").
+                deviceWebhook:
+                  type: string
+                  description: Notifications about device and battery level ("yes" or "no").
+                statusInstanceWebhook:
+                  type: string
+                  description: Notifications about account socket connection status changes ("yes" or "no").
+                keepOnlineStatus:
+                  type: string
+                  description: Set status "Online" ("yes" or "no").
+                proxyInstance:
+                  type: string
+                  description: Client proxy address in the format ip:port:login:password.
+                sendFromUTC:
+                  type: string
+                  description: Time to start sending messages (UTC). Must be used together with sendToUTC.
+                sendToUTC:
+                  type: string
+                  description: Time to stop sending messages (UTC). Must be used together with sendFromUTC.
+            examples:
+              general:
+                summary: General settings update
+                value:
+                  countryInstance: "ru"
+                  webhookUrl: "https://mysite.com/webhook/sdkwa.pro/"
+                  webhookUrlToken: ""
+                  delaySendMessagesMilliseconds: 1000
+                  markIncomingMessagesReaded: "no"
+                  markIncomingMessagesReadedOnReply: "no"
+                  outgoingWebhook: "yes"
+                  outgoingMessageWebhook: "yes"
+                  stateWebhook: "yes"
+                  incomingWebhook: "yes"
+                  deviceWebhook: "no"
+                  statusInstanceWebhook: "yes"
+              timeInterval:
+                summary: Set sending time interval
+                value:
+                  sendFromUTC: "09:00"
+                  sendToUTC: "15:00"
+      responses:
+        '200':
+          description: Indicates whether the settings were successfully saved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  saveSettings:
+                    type: boolean
+                    description: Flag that the settings are saved.
+              example:
+                saveSettings: true
+  /whatsapp/{idInstance}/getStateInstance:
+    get:
+      tags:
+        - Account
+      summary: Get account state
+      description: >
+        This method retrieves the current state of the account instance. Possible states include:
+        - `notAuthorized`: The account is not authorized. See the QR code authorization instructions.
+        - `authorized`: The account is authorized and ready to use.
+        - `blocked`: The account is banned.
+        - `starting`: The account is starting up or in maintenance mode. It may take up to 5 minutes to become authorized, or the instance may have a non-working user proxy.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      responses:
+        '200':
+          description: Current state of the account instance.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stateInstance:
+                    type: string
+                    description: >
+                      Account state. Possible values:
+                        - `notAuthorized`: Account is not authorized.
+                        - `authorized`: Account is authorized.
+                        - `blocked`: Account is banned.
+                        - `starting`: Account is starting up or in maintenance mode.
+              example:
+                stateInstance: "authorized"
+  /whatsapp/{idInstance}/getWarmingPhoneStatus:
+    get:
+      tags:
+        - Account
+      summary: Get warming phone status
+      description: >-
+        The method gets the account warming state.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response with warming phone status.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  warmingType:
+                    type: string
+                    description: |
+                      Account warming option.
+                      Possible values:
+                        - USER_PHONES: Warming with only user phones
+                        - USER_AND_WORKERS_PHONES: Warming with user phones and phones from phone base
+                  status:
+                    type: number
+                    description: Account warming indicator level percent.
+                  isWarmingRunning:
+                    type: string
+                    description: |
+                      Account warming state.
+                      Possible values:
+                        - NOT_STARTED: Warming for account not started
+                        - STARTED: Warming is started.
+                  forWarming:
+                    type: number
+                    description: Phones for warming.
+                  notWarmed:
+                    type: number
+                    description: Not warmed phones.
+                  warmed:
+                    type: number
+                    description: Phones that were already warmed.
+              example:
+                warmingType: USER_AND_WORKERS_PHONES
+                status: 0.88
+                isWarmingRunning: STARTED
+                forWarming: 1
+                notWarmed: 2
+                warmed: 0
+  /whatsapp/{idInstance}/reboot:
+    get:
+      tags:
+        - Account
+      summary: Reboot account
+      description: >
+        This method reboots the specified WhatsApp account instance.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      responses:
+        '200':
+          description: Indicates whether the WhatsApp account was successfully rebooted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isReboot:
+                    type: boolean
+                    description: Result of rebooting WhatsApp account.
+              example:
+                isReboot: true
+  /whatsapp/{idInstance}/logout:
+    get:
+      tags:
+        - Account
+      summary: Logout account
+      description: >
+        This method logs out the specified WhatsApp account instance.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      responses:
+        '200':
+          description: Indicates whether the WhatsApp account was successfully logged out.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isLogout:
+                    type: boolean
+                    description: WhatsApp account logging out result.
+              example:
+                isLogout: true
+  /whatsapp/{idInstance}/qr:
+    get:
+      tags:
+        - Account
+      summary: Get QR code for account authorization
+      description: >
+        This method returns a QR code for authorizing your WhatsApp account. 
+        Scan the QR code using the WhatsApp Business app on your phone. 
+        The QR code is updated every 20 seconds, so it is recommended to request this method with a 1-second delay. 
+        If the account is already authorized, you must log out before requesting a new QR code.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      responses:
+        '200':
+          description: QR code or status message for account authorization.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: >
+                      Message type. Possible values:
+                        - `qrCode`: QR code image returned.
+                        - `error`: An error occurred.
+                        - `alreadyLogged`: Account is already authorized.
+                  message:
+                    type: string
+                    description: >
+                      Message content. For `qrCode`, this is a base64-encoded PNG image. 
+                      For `error`, this is an error description. 
+                      For `alreadyLogged`, this is a status message.
+              examples:
+                qrCode:
+                  summary: QR code image
+                  value:
+                    type: "qrCode"
+                    message: "iVBORw0KGgoAAAANSUhEUgAA..." # base64 string
+                error:
+                  summary: Error occurred
+                  value:
+                    type: "error"
+                    message: "Instance has auth. You need to make log out"
+                alreadyLogged:
+                  summary: Account already authorized
+                  value:
+                    type: "alreadyLogged"
+                    message: "instance account already authorized"
+  /whatsapp/{idInstance}/getAuthorizationCode:
+    post:
+      tags:
+        - Account
+      summary: Get authorization code for account authorization
+      description: >
+        This method is used to authorize an instance by phone number as an alternative to QR code authorization.
+        The official WhatsApp or WhatsApp Business app must be installed on your phone. 
+        Use the "Link device" -> "Link with phone number" option in the app, then call this method with your phone number in international format (without + or 00).
+        The response will contain a status and an authorization code. The code is valid for about 2 minutes.
+        If the instance is already logged, you must log out first.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phoneNumber:
+                  type: integer
+                  description: Phone number in international format without + or 00.
+              required:
+                - phoneNumber
+            example:
+              phoneNumber: 712345678989
+      responses:
+        '200':
+          description: Authorization code response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    description: >
+                      Status of code retrieval. 
+                      true - code received successfully; 
+                      false - code not received (instance already authorized or error occurred).
+                  code:
+                    type: string
+                    description: Authorization code (valid for 2 minutes).
+              examples:
+                success:
+                  summary: Code received successfully
+                  value:
+                    status: true
+                    code: "8G9VR9QT"
+        '400':
+          description: Validation error or instance already logged.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                  timestamp:
+                    type: string
+                  path:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                validationFailed:
+                  summary: Validation failed
+                  value:
+                    statusCode: 400
+                    timestamp: "2023-06-21T09:20:39.876Z"
+                    path: "/whatsapp/1101000001/getAuthorizationCode"
+                    message: "Validation failed. Details: Wrong format. 'phoneNumber' must contain contain country code and only digits"
+                instanceAlreadyLogged:
+                  summary: Instance already logged
+                  value: "Instance already logged"
+                WaConnectionClosedException:
+                  summary: "Connection to whatsapp was closed"
+                  value: "Connection to whatsapp was closed due reason Instance has auth. You need to make log out"
+  /whatsapp/{idInstance}/requestRegistrationCode:
+    post:
+      tags:
+        - Account
+      summary: Request registration code
+      description: The method is designed to receive a phone number registration code via SMS or a call.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phoneNumber:
+                  type: number
+                  description: Phone number with country code, for example 7123456789
+                method:
+                  type: string
+                  enum: [sms, voice]
+                  description: Request type. `voice` or `sms` is supported.
+              required:
+                - phoneNumber
+                - method
+            example:
+              phoneNumber: 7123456789
+              method: sms
+      responses:
+        '200':
+          description: Successful response with registration code request status.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      flash_type:
+                        type: number
+                        description: System parameter
+                      login:
+                        type: string
+                        description: Phone number
+                      length:
+                        type: string
+                        description: Code length. The default value is 6. Present only for successful sending.
+                      method:
+                        type: string
+                        description: Code getting method. Present only for successful submission.
+                      reason:
+                        type: string
+                        description: The reason why it is not possible to receive the code.
+                      retry_after:
+                        type: number
+                        description: Countdown in seconds until the next attempt
+                      sms_wait:
+                        type: number
+                        description: Countdown in seconds until next sms attempt
+                      status:
+                        type: string
+                        description: The status of the current request. For example, sent - the code has been sent, fail - an unsuccessful attempt
+                      voice_wait:
+                        type: string
+                        description: Countdown in seconds until the next attempt to request a code on a call
+                      wa_old_wait:
+                        type: string
+                        description: Countdown of the time during which the received code is active
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [alreadyLogged]
+                        description: Indicates the account is already logged in.
+                      message:
+                        type: string
+                        description: instance account already authorized
+              examples:
+                success:
+                  summary: Successful code request
+                  value:
+                    flash_type: 0
+                    login: "7123456789"
+                    length: "6"
+                    method: "sms"
+                    status: "sent"
+                    retry_after: 0
+                    sms_wait: 0
+                    voice_wait: "0"
+                    wa_old_wait: "300"
+                alreadyLogged:
+                  summary: Account already logged in
+                  value:
+                    type: "alreadyLogged"
+                    message: "instance account already authorized"
+  /whatsapp/{idInstance}/sendRegistrationCode/:
+    post:
+      tags:
+        - Account
+      summary: Send registration code
+      description: >
+        The method is intended for sending the phone number registration code received via SMS or call.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: The registration code received via SMS or call.
+              required:
+                - code
+            example:
+              code: "999999"
+      responses:
+        '200':
+          description: Response indicating the result of sending the registration code.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: Message type, possible values are `error`, `alreadyLogged`.
+                  message:
+                    type: string
+                    description: The content of the message. Varies depending on the value of the `type` field.
+              examples:
+                success:
+                  summary: Successful code submission
+                  value:
+                    type: ""
+                    message: "Registration code accepted"
+                error:
+                  summary: Error response
+                  value:
+                    type: "error"
+                    message: "Invalid code"
+                alreadyLogged:
+                  summary: Already logged in response
+                  value:
+                    type: "alreadyLogged"
+                    message: "instance account already authorized"
+  /whatsapp/{idInstance}/sendMessage:
+    post:
+      tags:
+        - Sending
+      summary: Send message
+      description: >
+        The method is used to send a text message to either a personal or group chat.
+        Messages are placed in a sending queue and do not require a linked device at the time of sending.
+        Queued messages will be stored for up to 24 hours until the account is authorized.
+        The rate at which messages are sent from the queue is controlled by the Message sending delay parameter.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatId:
+                  type: string
+                  description: Chat Id (personal like 11001234567@c.us or group like 11001234567-1581234048@g.us)
+                message:
+                  type: string
+                  description: Message text. Emoji 😃 characters supported. Max length 4096 characters.
+                quotedMessageId:
+                  type: string
+                  description: Quoted message ID. If present, the message will be sent quoting the specified chat message.
+                archiveChat:
+                  type: boolean
+                  description: Archives the chat to which the message was sent. true/false
+                linkPreview:
+                  type: boolean
+                  description: Includes displaying a preview and a description of the link. Enabled by default. true/false
+              required:
+                - chatId
+                - message
+            examples:
+              personal:
+                summary: Sending a message to a personal chat
+                value:
+                  chatId: "11001234567@c.us"
+                  message: "hello world"
+              group:
+                summary: Sending a message to a group chat
+                value:
+                  chatId: "11001234567-1581234048@g.us"
+                  message: "hello world"
+              quoted:
+                summary: Sending a quoted message
+                value:
+                  chatId: "11001234567@c.us"
+                  message: "hello world"
+                  quotedMessageId: "361B0E63F2FDF95903B6A9C9A102F34B"
+      responses:
+        '200':
+          description: Successful response with sent message ID.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  idMessage:
+                    type: string
+                    description: Sent message Id
+              example:
+                idMessage: "3EB0C767D097B7C7C030"
+  /whatsapp/{idInstance}/sendContact:
+    post:
+      tags:
+        - Sending
+      summary: Send contact
+      description: >
+        This method allows you to send a contact card message to a chat. The contact message is placed in the sending queue and does not require a linked device at the time of sending.
+        Messages will remain in the queue for up to 24 hours until the account is authorized.
+        The rate at which messages are sent from the queue is controlled by the Message sending delay parameter.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatId:
+                  type: string
+                  description: Chat Id (personal or group)
+                contact:
+                  type: object
+                  required:
+                    - phoneContact
+                  properties:
+                    phoneContact:
+                      type: integer
+                      description: Contact phone number in international format (no +), 11 or 12 digits
+                    firstName:
+                      type: string
+                      description: Contact first name (required if middleName, lastName, and company are not specified)
+                    middleName:
+                      type: string
+                      description: Contact middle name (required if firstName, lastName, and company are not specified)
+                    lastName:
+                      type: string
+                      description: Contact last name (required if firstName, middleName, and company are not specified)
+                    company:
+                      type: string
+                      description: Contact company name (required if firstName, middleName, and lastName are not specified)
+                quotedMessageId:
+                  type: string
+                  description: Quoted message ID. If present, the message will be sent quoting the specified chat message.
+              required:
+                - chatId
+                - contact
+            examples:
+              personal:
+                summary: Sending a contact to a personal chat
+                value:
+                  chatId: "11001234567@c.us"
+                  contact:
+                    phoneContact: 79001234568
+                    firstName: "Joe"
+                    middleName: "Mr"
+                    lastName: "Johnson"
+                    company: "FirstAqua"
+              group:
+                summary: Sending a contact to a group chat
+                value:
+                  chatId: "11001234567-1581234048@g.us"
+                  contact:
+                    phoneContact: 79001234568
+                    firstName: "Joe"
+                    middleName: "Mr"
+                    lastName: "Johnson"
+                    company: "FirstAqua"
+              quoted:
+                summary: Sending a quoted contact message
+                value:
+                  chatId: "11001234567@c.us"
+                  quotedMessageId: "361B0E63F2FDF95903B6A9C9A102F34B"
+                  contact:
+                    phoneContact: 79001234568
+                    firstName: "Joe"
+                    middleName: "Mr"
+                    lastName: "Johnson"
+                    company: "FirstAqua"
+      responses:
+        '200':
+          description: Successful response with outgoing message ID.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  idMessage:
+                    type: string
+                    description: Outgoing message Id
+              example:
+                idMessage: "3EB0C767D097B7C7C030"
+  /whatsapp/{idInstance}/sendFileByUpload:
+    post:
+      tags:
+        - Sending
+      summary: Send file by upload
+      description: >
+        This method allows you to send a file by uploading it using form-data. The file message is placed in the sending queue, and the sending rate is controlled by the Message sending delay parameter.
+        Video, audio, and image files are sent in a way that allows them to be viewed or played natively in WhatsApp. Documents are also sent as in native WhatsApp. The file type and sending method are determined by the file extension. Captions can be added to images and videos only.
+        The maximum allowed file size is 100 MB.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                chatId:
+                  type: string
+                  description: Chat Id (personal or group)
+                file:
+                  type: string
+                  format: binary
+                  description: Outgoing file to be sent
+                fileName:
+                  type: string
+                  description: File name, including extension
+                caption:
+                  type: string
+                  description: Caption for the file (applies to images and videos only)
+                quotedMessageId:
+                  type: string
+                  description: Quoted message ID. If present, the message will be sent quoting the specified chat message.
+              required:
+                - chatId
+                - file
+            example:
+              chatId: "11001234567@c.us"
+              file: (binary)
+              fileName: "window.jpg"
+              caption: "Description"
+              quotedMessageId: "361B0E63F2FDF95903B6A9C9A102F34B"
+      responses:
+        '200':
+          description: Successful response with sent message ID.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  idMessage:
+                    type: string
+                    description: Sent message Id
+              example:
+                idMessage: "3EB0C767D097B7C7C030"
+  /whatsapp/{idInstance}/sendFileByUrl:
+    post:
+      tags:
+        - Sending
+      summary: Send file by URL
+      description: >
+        This method allows you to send a file by providing its URL. The file message is added to the sending queue and will be sent as soon as the account is authorized. Messages remain in the queue for up to 24 hours. The sending rate is managed by the Message sending delay parameter.
+        Video, audio, and image files are delivered in a format that enables native viewing or playback in WhatsApp, while documents are sent as standard files. The file type and sending method are determined by the file extension. Captions can be included only for images and videos.
+        The maximum file size for outgoing files is 100 MB.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatId:
+                  type: string
+                  description: Chat Id (personal or group)
+                urlFile:
+                  type: string
+                  description: Link to the outgoing file
+                fileName:
+                  type: string
+                  description: File name, including extension
+                caption:
+                  type: string
+                  description: Caption for the file (applies to images and videos only)
+                quotedMessageId:
+                  type: string
+                  description: Quoted message ID. If present, the message will be sent quoting the specified chat message.
+                archiveChat:
+                  type: boolean
+                  description: Archives the chat to which the message was sent. true/false
+              required:
+                - chatId
+                - urlFile
+                - fileName
+            examples:
+              personal:
+                summary: Sending a file to a personal chat
+                value:
+                  chatId: "11001234567@c.us"
+                  urlFile: "https://my.site.com/img/horse.png"
+                  fileName: "horse.png"
+                  caption: "Little horse"
+              group:
+                summary: Sending a file to a group chat
+                value:
+                  chatId: "11001234567-1581234048@g.us"
+                  urlFile: "https://my.site.com/img/horse.png"
+                  fileName: "horse.png"
+                  caption: "Little horse"
+              quoted:
+                summary: Sending a quoted file message
+                value:
+                  chatId: "11001234567@c.us"
+                  urlFile: "https://my.site.com/img/horse.png"
+                  fileName: "horse.png"
+                  caption: "Little horse"
+                  quotedMessageId: "361B0E63F2FDF95903B6A9C9A102F34B"
+      responses:
+        '200':
+          description: Successful response with outgoing message ID.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  idMessage:
+                    type: string
+                    description: Outgoing message Id
+              example:
+                idMessage: "3EB0C767D097B7C7C030"
+  /whatsapp/{idInstance}/sendLocation:
+    post:
+      tags:
+        - Sending
+      summary: Send location
+      description: >
+        This method allows you to send a location message to a chat. The message is placed in the sending queue and does not require a linked device at the time of sending.
+        Messages remain in the queue for up to 24 hours until the account is authorized. The sending rate is managed by the Message sending delay parameter.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatId:
+                  type: string
+                  description: Chat Id (personal or group)
+                nameLocation:
+                  type: string
+                  description: Location name
+                address:
+                  type: string
+                  description: Location address
+                latitude:
+                  type: number
+                  format: double
+                  description: Location latitude
+                longitude:
+                  type: number
+                  format: double
+                  description: Location longitude
+                quotedMessageId:
+                  type: string
+                  description: Quoted message ID. If present, the message will be sent quoting the specified chat message.
+              required:
+                - chatId
+                - latitude
+                - longitude
+            examples:
+              personal:
+                summary: Sending a location to a personal chat
+                value:
+                  chatId: "11001234567@c.us"
+                  nameLocation: "Restaurant"
+                  address: "123456, Perm"
+                  latitude: 12.3456789
+                  longitude: 10.1112131
+              group:
+                summary: Sending a location to a group chat
+                value:
+                  chatId: "11001234567-1581234048@g.us"
+                  nameLocation: "Restaurant"
+                  address: "123456, Perm"
+                  latitude: 12.3456789
+                  longitude: 10.1112131
+              quoted:
+                summary: Sending a quoted location message
+                value:
+                  chatId: "11001234567@c.us"
+                  nameLocation: "Restaurant"
+                  address: "123456, Perm"
+                  latitude: 12.3456789
+                  longitude: 10.1112131
+                  quotedMessageId: "361B0E63F2FDF95903B6A9C9A102F34B"
+      responses:
+        '200':
+          description: Successful response with outgoing message ID.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  idMessage:
+                    type: string
+                    description: Outgoing message Id
+              example:
+                idMessage: "3EB0C767D097B7C7C030"
+  /whatsapp/{idInstance}/uploadFile:
+    post:
+      tags:
+        - Sending
+      summary: Upload file
+      description: >
+        This method uploads a file to storage for later sending to a recipient. Use this method if you cannot send a file directly with SendFileByUrl. The response returns a link to the uploaded file, which can be reused with the SendFileByUrl method. Uploaded file links are valid for 14 days.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+            example: "<file binary data>"
+      responses:
+        '200':
+          description: Successful response with file link.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  urlFile:
+                    type: string
+                    description: Link to the uploaded file
+              example:
+                urlFile: "https://sdkwa.pro/1101000001/56b8dd93-8cc5-4ad7-a989-d58a26a924a6.jpeg"
+  /whatsapp/{idInstance}/receiveNotification:
+    get:
+      tags:
+        - Receiving
+      summary: Receive notification
+      description: >
+        This method retrieves a single incoming notification from the notifications queue. The method waits up to 5 seconds for a notification to arrive. If no notification is received within this period, an empty response is returned. If a notification is available, it is returned immediately.
+        After processing a notification, you must remove it from the queue using the DeleteNotification method. Notifications are stored in the queue for 24 hours and are delivered in FIFO (first-in, first-out) order.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      responses:
+        '200':
+          description: Successful response with the next incoming notification, or empty if none is available.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  receiptId:
+                    type: integer
+                    description: Receipt Id for deleting the incoming notification using the DeleteNotification method.
+                  body:
+                    type: object
+                    description: Incoming notification object.
+              example:
+                receiptId: 1234567
+                body:
+                  typeWebhook: "incomingMessageReceived"
+                  instanceData:
+                    idInstance: 1234
+                    wid: "11001234567@c.us"
+                    typeInstance: "whatsapp"
+                  timestamp: 1588091580
+                  idMessage: "F7AEC1B7086ECDC7E6E45923F5EDB825"
+                  senderData:
+                    chatId: "79001234568@c.us"
+                    sender: "79001234568@c.us"
+                    senderName: "sdkwa"
+                  messageData:
+                    typeMessage: "textMessage"
+                    textMessageData:
+                      textMessage: "hello world"
+  /whatsapp/{idInstance}/deleteNotification/{receiptId}:
+    delete:
+      tags:
+        - Receiving
+      summary: Delete notification
+      description: >
+        This method deletes an incoming notification from the notification queue using the specified `receiptId`. After you receive and process a notification, call this method to permanently remove it from the queue. Once deleted, the notification is considered processed, and the next call to ReceiveNotification will return the next notification in FIFO order. Notifications are stored in the queue for 24 hours.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+        - name: receiptId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Receipt Id for deleting an incoming notification received by the ReceiveNotification method.
+      responses:
+        '200':
+          description: Result of deleting the incoming notification.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+                    description: >
+                      Incoming notification deleting result: `true` if the notification was successfully deleted from the queue; `false` if the notification was not deleted (for example, if it was already deleted or the receiptId is invalid).
+              example:
+                result: true
+  /whatsapp/{idInstance}/downloadFile/{idMessage}:
+    post:
+      tags:
+        - Sending
+      summary: Download file
+      description: >
+        This method allows you to download incoming and outgoing files. Links to incoming files are provided in incoming messages and can also be obtained using the LastIncomingMessages method. Outgoing file links are available via the LastOutgoingMessages method. The storage period for files, and thus the ability to download them, is limited by WhatsApp.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+        - name: idMessage
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Message Id from incoming messages or file sending methods.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatId:
+                  type: string
+                  description: Chat Id, e.g., 7900023125@c.us
+              required:
+                - chatId
+            example:
+              chatId: "790000312312@c.us"
+      responses:
+        '200':
+          description: File content as a binary stream.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /whatsapp/{idInstance}/getChatHistory:
+    post:
+      tags:
+        - Sending
+      summary: Get chat history
+      description: >
+        This method returns the message history for a specified chat. The response includes both sent and received messages, sorted by timestamp in descending order.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatId:
+                  type: string
+                  description: Personal or group chat Id for which to retrieve message history.
+                count:
+                  type: integer
+                  description: Number of messages to retrieve (default is 100).
+              required:
+                - chatId
+            example:
+              chatId: "11001234567@c.us"
+              count: 10
+      responses:
+        '200':
+          description: List of chat messages, including both incoming and outgoing messages, sorted by timestamp descending.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      description: Message direction, either 'outgoing' or 'incoming'.
+                    timestamp:
+                      type: integer
+                      description: UNIX timestamp of when the message was sent.
+                    idMessage:
+                      type: string
+                      description: Message Id.
+                    statusMessage:
+                      type: string
+                      description: Outgoing message status (only for outgoing messages) sent, delivered, or read.
+                    typeMessage:
+                      type: string
+                      description: Message type (e.g., textMessage, imageMessage, videoMessage, documentMessage, audioMessage, locationMessage, contactMessage, extendedTextMessage).
+                    chatId:
+                      type: string
+                      description: Chat Id.
+                    senderId:
+                      type: string
+                      description: Sender Id (only for incoming messages).
+                    senderName:
+                      type: string
+                      description: Sender name (only for incoming messages).
+                    textMessage:
+                      type: string
+                      description: Message text (for textMessage type).
+                    downloadUrl:
+                      type: string
+                      description: Download link for files (for imageMessage, videoMessage, documentMessage, audioMessage).
+                    caption:
+                      type: string
+                      description: File caption (for imageMessage, videoMessage, documentMessage).
+                    location:
+                      type: object
+                      description: Location object (for locationMessage type).
+                      properties:
+                        nameLocation:
+                          type: string
+                          description: Location name.
+                        address:
+                          type: string
+                          description: Location address.
+                        latitude:
+                          type: number
+                          format: double
+                          description: Location latitude.
+                        longitude:
+                          type: number
+                          format: double
+                          description: Location longitude.
+                        jpegThumbnail:
+                          type: string
+                          description: Base64-encoded image preview.
+                    contact:
+                      type: object
+                      description: Contact object (for contactMessage type).
+                      properties:
+                        displayName:
+                          type: string
+                          description: Contact display name.
+                        vcard:
+                          type: string
+                          description: VCard structure.
+                    extendedTextMessage:
+                      type: object
+                      description: Link data object (for extendedTextMessage type).
+                      properties:
+                        text:
+                          type: string
+                          description: Link text.
+                        description:
+                          type: string
+                          description: Link description.
+                        title:
+                          type: string
+                          description: Link title.
+                        previewType:
+                          type: string
+                          description: Link preview type.
+                        jpegThumbnail:
+                          type: string
+                          description: Base64-encoded image preview.
+              example:
+                - type: "incoming"
+                  timestamp: 1603964449
+                  idMessage: "3AADDD555CB0822C0539"
+                  typeMessage: "textMessage"
+                  chatId: "11001234567@c.us"
+                  senderId: "11001234567@c.us"
+                  senderName: "Andrew Sh"
+                  textMessage: "I use SDKWA to get this message from you!"
+                - type: "outgoing"
+                  timestamp: 1603964445
+                  idMessage: "3EB08816FEBCCC3FACD2"
+                  statusMessage: "read"
+                  typeMessage: "textMessage"
+                  chatId: "11001234567@c.us"
+                  textMessage: "hello world"
+                - type: "incoming"
+                  timestamp: 1603964444
+                  idMessage: "3AA45F9F285C5249CDFC"
+                  typeMessage: "imageMessage"
+                  chatId: "11001234567@c.us"
+                  senderId: "11001234567@c.us"
+                  senderName: "Andrew Sh"
+                  downloadUrl: "https://sdkwa.pro/ffsdfsdfsdfh.jpg"
+                  caption: "SDKWA Logo"
+  /whatsapp/{idInstance}/lastOutgoingMessages:
+    get:
+      tags:
+        - Journals
+      summary: Get last outgoing messages
+      description: >
+        This method retrieves the most recent outgoing messages for the account. By default, it returns messages sent in the last 24 hours. You can specify a custom time period in minutes using the `minutes` parameter.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+        - name: minutes
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1440
+          description: Time period in minutes for which to return outgoing messages (default is 1440 minutes, i.e., 24 hours).
+      responses:
+        '200':
+          description: Array of outgoing messages sent by the account.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    idMessage:
+                      type: string
+                      description: Outgoing message Id.
+                    timestamp:
+                      type: integer
+                      description: Time of the last action on the message in UNIX format.
+                    statusMessage:
+                      type: string
+                      description: Outgoing message status (e.g., noAccount, notInGroup, sent, delivered, read).
+                    typeMessage:
+                      type: string
+                      description: Message type (e.g., textMessage, imageMessage, videoMessage, documentMessage, audioMessage, locationMessage, contactMessage, extendedTextMessage).
+                    chatId:
+                      type: string
+                      description: Chat Id where the message was sent.
+                    textMessage:
+                      type: string
+                      description: Message text (for textMessage type).
+                    downloadUrl:
+                      type: string
+                      description: Download link for files (for imageMessage, videoMessage, documentMessage, audioMessage).
+                    caption:
+                      type: string
+                      description: File caption.
+                    location:
+                      type: object
+                      description: Location object (for locationMessage type).
+                      properties:
+                        nameLocation:
+                          type: string
+                          description: Location name.
+                        address:
+                          type: string
+                          description: Location address.
+                        latitude:
+                          type: number
+                          format: double
+                          description: Location latitude.
+                        longitude:
+                          type: number
+                          format: double
+                          description: Location longitude.
+                        jpegThumbnail:
+                          type: string
+                          description: Base64-encoded image preview.
+                    contact:
+                      type: object
+                      description: Contact object (for contactMessage type).
+                      properties:
+                        displayName:
+                          type: string
+                          description: Contact display name.
+                        vcard:
+                          type: string
+                          description: VCard structure.
+                    extendedTextMessage:
+                      type: object
+                      description: Link data object (for extendedTextMessage type).
+                      properties:
+                        text:
+                          type: string
+                          description: Link text.
+                        description:
+                          type: string
+                          description: Link description.
+                        title:
+                          type: string
+                          description: Link title.
+                        previewType:
+                          type: string
+                          description: Link preview type.
+                        jpegThumbnail:
+                          type: string
+                          description: Base64-encoded image preview.
+              example:
+                - idMessage: "3EB0BDDC94BFDFB3D4FA"
+                  timestamp: 1587133830
+                  statusMessage: "read"
+                  typeMessage: "textMessage"
+                  chatId: "11001234567@c.us"
+                  textMessage: "Hi"
+                - idMessage: "3EB0BDDC94BFDFB3D4FA"
+                  timestamp: 1587133830
+                  statusMessage: "read"
+                  typeMessage: "imageMessage"
+                  chatId: "11001234567@c.us"
+                  downloadUrl: "https://{{apiHost}}/waInstance1234/downloadFile/3EB0BDDC94BFDFB3D4FA"
+                  caption: "What do you think?"
+  /whatsapp/{idInstance}/lastIncomingMessages:
+    get:
+      tags:
+        - Journals
+      summary: Get last incoming messages
+      description: >
+        This method retrieves the most recent incoming messages for the account. By default, it returns messages received in the last 24 hours. You can specify a different time period in minutes using the `minutes` query parameter.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+        - name: minutes
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1440
+          description: Time period in minutes for which to return incoming messages (default is 1440 minutes, i.e., 24 hours).
+      responses:
+        '200':
+          description: Array of incoming messages received by the account.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    idMessage:
+                      type: string
+                      description: Incoming message Id.
+                    timestamp:
+                      type: integer
+                      description: Message acceptance time in UNIX format.
+                    typeMessage:
+                      type: string
+                      description: Message type (e.g., textMessage, imageMessage, videoMessage, documentMessage, audioMessage, locationMessage, contactMessage, extendedTextMessage, quotedMessage, buttonsMessage, templateMessage, listMessage, buttonsResponseMessage, templateButtonsReplyMessage, listResponseMessage).
+                    chatId:
+                      type: string
+                      description: Chat Id where the message was received.
+                    senderId:
+                      type: string
+                      description: Message sender Id.
+                    senderName:
+                      type: string
+                      description: Message sender name.
+                    textMessage:
+                      type: string
+                      description: Text message (for textMessage type).
+                    downloadUrl:
+                      type: string
+                      description: Download link for files (for imageMessage, videoMessage, documentMessage, audioMessage).
+                    caption:
+                      type: string
+                      description: File caption.
+                    location:
+                      type: object
+                      description: Location object (for locationMessage type).
+                      properties:
+                        nameLocation:
+                          type: string
+                          description: Location name.
+                        address:
+                          type: string
+                          description: Location address.
+                        latitude:
+                          type: number
+                          format: double
+                          description: Location latitude.
+                        longitude:
+                          type: number
+                          format: double
+                          description: Location longitude.
+                        jpegThumbnail:
+                          type: string
+                          description: Base64-encoded image preview.
+                    contact:
+                      type: object
+                      description: Contact object (for contactMessage type).
+                      properties:
+                        displayName:
+                          type: string
+                          description: Contact display name.
+                        vcard:
+                          type: string
+                          description: VCard structure.
+                    extendedTextMessage:
+                      type: object
+                      description: Link data object (for extendedTextMessage type).
+                      properties:
+                        text:
+                          type: string
+                          description: Link text.
+                        description:
+                          type: string
+                          description: Link description.
+                        title:
+                          type: string
+                          description: Link title.
+                        previewType:
+                          type: string
+                          description: Link preview type.
+                        jpegThumbnail:
+                          type: string
+                          description: Base64-encoded image preview.
+                        stanzaId:
+                          type: string
+                          description: Quoted message ID.
+                        participant:
+                          type: string
+                          description: Recipient chat ID.
+                    quotedMessage:
+                      type: object
+                      description: Quoted message data object (present if the message is a quote).
+              example:
+                - idMessage: "DE8CFFA93B95237B077F8FA08331A0B5"
+                  timestamp: 1587129319
+                  typeMessage: "textMessage"
+                  chatId: "11001234567@c.us"
+                  senderId: "11001234567@c.us"
+                  senderName: "Nikolay"
+                  textMessage: "Hi"
+                - idMessage: "EA0BD1AE042DC4F3609867126309D67C"
+                  timestamp: 1587147598
+                  typeMessage: "imageMessage"
+                  chatId: "11001234567@c.us"
+                  senderId: "11001234567@c.us"
+                  senderName: "Nikolay"
+                  downloadUrl: "https://{{apiHost}}/waInstance1234/downloadFile/EA1BD1AE042DC4F3609867126309D67C"
+                  caption: "What do you think?"
+                - idMessage: "DE8CFFA93B95237B077F8FA08331A0B5"
+                  timestamp: 1587129319
+                  typeMessage: "locationMessage"
+                  chatId: "71234567891@c.us"
+                  senderId: "1234567891@c.us"
+                  senderName: "Nikolay"
+                  location:
+                    nameLocation: "I'm here, come"
+                    address: "614111, Perm"
+                    latitude: 53.9370129
+                    longitude: 54.8728409
+                    jpegThumbnail: "/9j/4AAQSkZJRgABAQAAAQABAAD/2wB=="
+                - idMessage: "DE8CFFA93B95237B077F8FA08331A0B5"
+                  timestamp: 1587129319
+                  typeMessage: "contactMessage"
+                  chatId: "1234567891@c.us"
+                  senderId: "71234567891@c.us"
+                  senderName: "Nikolay"
+                  contact:
+                    displayName: "Victor Petrov"
+                    vcard: "BEGIN:VCARD\nVERSION:3.0\nN:Andreevich;Victor;;;\nFN:Victor Andreevich\nORG:Image\nTITLE:\nitem1.TEL;waid=79099291652:+7 123 456-78-91\nitem1.X-ABLabel:Mobile\nEND:VCARD"
+                - idMessage: "DE8CFFA93B95237B077F8FA08331A0B5"
+                  timestamp: 1587129319
+                  typeMessage: "extendedTextMessage"
+                  chatId: "1234567891@c.us"
+                  senderId: "71234567891@c.us"
+                  senderName: "Nikolay"
+                  extendedTextMessage:
+                    text: "https://www.youtube.com/watch?v=9lO06Zxhu8*8*"
+                    description: "Video clip"
+                    title: "Cool video clip"
+                    previewType: "video"
+                    jpegThumbnail: "/9j/4AAQSkZJRgABAQAAAQABAAD/2wB=="
+                - idMessage: "6195B3523153621DFDFC184D3317E80D"
+                  timestamp: 1603182280
+                  typeMessage: "quotedMessage"
+                  chatId: "71234567891@c.us"
+                  senderId: "71234567891@c.us"
+                  senderName: "Mine"
+                  textMessage: "Quote test"
+                  extendedTextMessage:
+                    stanzaId: "3A6424373F90A939B3C8"
+                    participant: "71987654321@c.us"
+  /whatsapp/{idInstance}/clearMessagesQueue:
+    get:
+      tags:
+        - Queues
+      summary: Clear messages queue
+      description: >
+        This method clears all pending messages from the sending queue for the specified instance.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      responses:
+        '200':
+          description: Indicates whether the messages queue was successfully cleared.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isCleared:
+                    type: boolean
+                    description: Flag indicating if the messages queue was cleared.
+              example:
+                isCleared: true
+  /whatsapp/{idInstance}/showMessagesQueue:
+    get:
+      tags:
+        - Queues
+      summary: Show messages queue
+      description: >
+        This method retrieves a list of messages currently in the sending queue for the specified instance. The rate at which messages are sent from the queue is controlled by the Messages sending delay parameter.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      responses:
+        '200':
+          description: Array of messages currently in the sending queue.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    typeMessage:
+                      type: string
+                      description: Message type (e.g., textMessage, imageMessage, videoMessage, documentMessage, audioMessage, locationMessage, contactMessage, extendedTextMessage).
+                    chatId:
+                      type: string
+                      description: Chat Id where the message will be sent.
+                    message:
+                      type: string
+                      description: Message text (for textMessage, locationMessage, contactMessage, or extendedTextMessage).
+                    fileName:
+                      type: string
+                      description: Outgoing file name (for imageMessage, videoMessage, documentMessage, or audioMessage).
+              example:
+                - typeMessage: "textMessage"
+                  chatId: "11001234567@c.us"
+                  message: "hello world"
+                - typeMessage: "imageMessage"
+                  chatId: "11001234567@c.us"
+                  fileName: "image.jpg"
+  /whatsapp/{idInstance}/updateGroupName:
+    post:
+      tags:
+        - Groups
+      summary: Update group name
+      description: >
+        This method changes the name of a group chat for the specified instance.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                groupId:
+                  type: string
+                  description: Group chat Id.
+                groupName:
+                  type: string
+                  description: New group chat name.
+              required:
+                - groupId
+                - groupName
+            example:
+              groupId: "11001234567-1587570015@g.us"
+              groupName: "Group created by Basis API+"
+      responses:
+        '200':
+          description: Indicates whether the group name was successfully changed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updateGroupName:
+                    type: boolean
+                    description: Group name change flag.
+              example:
+                updateGroupName: true
+  /whatsapp/{idInstance}/getGroupData:
+    post:
+      tags:
+        - Groups
+      summary: Get group chat data
+      description: >
+        This method retrieves information about a group chat, including its name, owner, creation time, participants, and invitation link.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                groupId:
+                  type: string
+                  description: Group chat Id.
+              required:
+                - groupId
+            example:
+              groupId: "11001234567-1587570015@g.us"
+      responses:
+        '200':
+          description: Group chat data including participants and group details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  groupId:
+                    type: string
+                    description: Group chat Id.
+                  owner:
+                    type: string
+                    description: Group owner Id.
+                  subject:
+                    type: string
+                    description: Group name.
+                  creation:
+                    type: integer
+                    description: Group creation time in Unix format.
+                  participants:
+                    type: array
+                    description: List of group participants.
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Participant Id.
+                        isAdmin:
+                          type: boolean
+                          description: Whether the user is a group administrator.
+                        isSuperAdmin:
+                          type: boolean
+                          description: Whether the user is a group super administrator.
+                  subjectTime:
+                    type: integer
+                    description: Group name creation time in Unix format.
+                  subjectOwner:
+                    type: string
+                    description: Id of the user who set the group name.
+                  groupInviteLink:
+                    type: string
+                    description: Group invitation link.
+              example:
+                groupId: "11001234567-1587570015@g.us"
+                owner: "11001234567@c.us"
+                subject: "Basis API Group"
+                creation: 1587570015
+                participants:
+                  - id: "11001234567@c.us"
+                    isAdmin: true
+                    isSuperAdmin: true
+                  - id: "79001234568@c.us"
+                    isAdmin: true
+                    isSuperAdmin: false
+                  - id: "79001234569@c.us"
+                    isAdmin: false
+                    isSuperAdmin: false
+                subjectTime: 1587737715
+                subjectOwner: "11001234567@c.us"
+                groupInviteLink: "https://chat.whatsapp.com/xxxxxxxxxxxxxxxxxxxxxx"
+  /whatsapp/{idInstance}/leaveGroup:
+    post:
+      tags:
+        - Groups
+      summary: Leave group chat
+      description: >
+        This method allows the current account user to leave a specified group chat.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                groupId:
+                  type: string
+                  description: Group chat Id to leave.
+              required:
+                - groupId
+            example:
+              groupId: "11001234567-1587570015@g.us"
+      responses:
+        '200':
+          description: Indicates whether the user has successfully left the group.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  leaveGroup:
+                    type: boolean
+                    description: Leave group flag.
+              example:
+                leaveGroup: true
+  /whatsapp/{idInstance}/setGroupAdmin:
+    post:
+      tags:
+        - Groups
+      summary: Set group participant as administrator
+      description: >
+        This method assigns administrator rights to a specified participant in a group chat.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                groupId:
+                  type: string
+                  description: Group chat Id.
+                participantChatId:
+                  type: string
+                  description: Id of the group participant to be set as administrator.
+              required:
+                - groupId
+                - participantChatId
+            example:
+              groupId: "11001234567-1587570015@g.us"
+              participantChatId: "79001234565@c.us"
+      responses:
+        '200':
+          description: Indicates whether the participant was successfully set as a group administrator.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  setGroupAdmin:
+                    type: boolean
+                    description: Flag indicating if the participant was set as administrator.
+              example:
+                setGroupAdmin: true
+  /whatsapp/{idInstance}/removeGroupParticipant:
+    post:
+      tags:
+        - Groups
+      summary: Remove group participant
+      description: >
+        This method removes a specified participant from a group chat.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                groupId:
+                  type: string
+                  description: Group chat Id.
+                participantChatId:
+                  type: string
+                  description: Id of the participant to be removed from the group.
+              required:
+                - groupId
+                - participantChatId
+            example:
+              groupId: "11001234567-1587570015@g.us"
+              participantChatId: "79001234565@c.us"
+      responses:
+        '200':
+          description: Indicates whether the participant was successfully removed from the group.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  removeParticipant:
+                    type: boolean
+                    description: Group participant removal flag.
+              example:
+                removeParticipant: true
+  /whatsapp/{idInstance}/removeAdmin:
+    post:
+      tags:
+        - Groups
+      summary: Remove group admin rights
+      description: >
+        This method revokes administrator rights from a specified participant in a group chat.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                groupId:
+                  type: string
+                  description: Group chat Id.
+                participantChatId:
+                  type: string
+                  description: Id of the group participant whose admin rights will be removed.
+              required:
+                - groupId
+                - participantChatId
+            example:
+              groupId: "11001234567-1587570015@g.us"
+              participantChatId: "79001234565@c.us"
+      responses:
+        '200':
+          description: Indicates whether the participant's admin rights were successfully removed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  removeAdmin:
+                    type: boolean
+                    description: Flag indicating if admin rights were removed.
+              example:
+                removeAdmin: true
+  /whatsapp/{idInstance}/createGroup:
+    post:
+      tags:
+        - Groups
+      summary: Create group chat
+      description: >
+        This method creates a new group chat with the specified name and participants.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                groupName:
+                  type: string
+                  description: Name for the new group chat.
+                chatIds:
+                  type: array
+                  items:
+                    type: string
+                  description: List of participant Ids to add to the group.
+              required:
+                - groupName
+                - chatIds
+            example:
+              groupName: "Group created by Basis API"
+              chatIds:
+                - "79001234568@c.us"
+                - "79001234569@c.us"
+      responses:
+        '200':
+          description: Indicates whether the group was created, and returns the group chat Id and invitation link.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: boolean
+                    description: Group creation flag.
+                  chatId:
+                    type: string
+                    description: Group chat Id.
+                  groupInviteLink:
+                    type: string
+                    description: Group invitation link.
+              example:
+                created: true
+                chatId: "11001234567-1587570015@g.us"
+                groupInviteLink: "https://chat.whatsapp.com/xxxxxxxxxxxxxxxxxxxxxx"
+  /whatsapp/{idInstance}/addGroupParticipant:
+    post:
+      tags:
+        - Groups
+      summary: Add participant to group chat
+      description: >
+        This method adds a specified participant to a group chat.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                groupId:
+                  type: string
+                  description: Group chat Id.
+                participantChatId:
+                  type: string
+                  description: Id of the participant to add to the group chat.
+              required:
+                - groupId
+                - participantChatId
+            example:
+              groupId: "11001234567-1587570015@g.us"
+              participantChatId: "79001234565@c.us"
+      responses:
+        '200':
+          description: Indicates whether the participant was successfully added to the group chat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  addParticipant:
+                    type: boolean
+                    description: Flag indicating if the participant was added to the group chat.
+              example:
+                addParticipant: true
+  /whatsapp/{idInstance}/setGroupPicture:
+    post:
+      tags:
+        - Groups
+      summary: Set group picture
+      description: >
+        This method sets a new picture for a group chat by uploading a JPEG image file.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: JPEG image file to set as the group picture.
+                groupId:
+                  type: string
+                  description: Group chat Id.
+              required:
+                - file
+                - groupId
+            example:
+              groupId: "12345678910-1112131415@g.us"
+              file: (binary)
+      responses:
+        '200':
+          description: Indicates whether the group picture was successfully set, and provides the URL of the new picture.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  setGroupPicture:
+                    type: boolean
+                    description: Result flag for setting the group picture.
+                  urlAvatar:
+                    type: string
+                    description: URL of the set group picture.
+                  reason:
+                    type: string
+                    description: Reason why the picture was not set (empty if successful).
+              example:
+                setGroupPicture: true
+                urlAvatar: "https://pps.whatsapp.net/v/t61.24694-24/138639660_724754321806449_9118612187814397965_n.jpg?oh=997b0bb13b6bbb750432a86d4b8d935d&oe=600****BB4"
+                reason: ""
+  /whatsapp/{idInstance}/readChat:
+    post:
+      tags:
+        - Read mark
+      summary: Mark chat messages as read
+      description: >
+        This method marks messages in a chat as read. You can mark either all messages or a specific message in the chat as read.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatId:
+                  type: string
+                  description: Chat Id.
+                idMessage:
+                  type: string
+                  description: ID of the incoming message to mark as read. If omitted, all unread messages in the chat will be marked as read.
+              required:
+                - chatId
+            examples:
+              singleMessage:
+                summary: Mark a single message as read
+                value:
+                  chatId: "11001234567@c.us"
+                  idMessage: "B275A7AA0D6EF89BB9245169BDF174E6"
+              allMessages:
+                summary: Mark all messages as read
+                value:
+                  chatId: "11001234567@c.us"
+      responses:
+        '200':
+          description: Indicates whether the messages were successfully marked as read.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  setRead:
+                    type: boolean
+                    description: Messages read mark flag.
+              example:
+                setRead: true
+  /whatsapp/{idInstance}/getContacts:
+    get:
+      tags:
+        - Account
+      summary: Get contacts
+      description: >
+        This method retrieves a list of contacts for the current account, including both users and group chats.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      responses:
+        '200':
+          description: Array of contacts for the current account.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: User or group chat Id.
+                    name:
+                      type: string
+                      description: >
+                        Contact name. If the contact is saved in the phonebook, the name is taken from there. If not, the name is taken from the WhatsApp account. If neither is available, the field is empty.
+                    type:
+                      type: string
+                      description: Contact type (`user` for individual contacts, `group` for group chats).
+              example:
+                - id: "11001234567@c.us"
+                  name: "Ivan Petrov"
+                  type: "user"
+                - id: "79001234568@c.us"
+                  name: "Lyusya Sidorova"
+                  type: "user"
+                - id: "79001234569-1479621234@g.us"
+                  name: "My group"
+                  type: "group"
+  /whatsapp/{idInstance}/getChats:
+    get:
+      tags:
+        - Account
+      summary: Get chats
+      description: >
+        This method retrieves a list of all chats for the current account, including both user and group chats.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      responses:
+        '200':
+          description: Array of chats for the current account.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: User or group chat Id.
+                    notSpam:
+                      type: boolean
+                      description: Indicates if the chat is not marked as spam.
+                    disappearingMode:
+                      type: string
+                      description: Chat disappearing mode.
+                    archive:
+                      type: boolean
+                      description: Indicates if the chat is archived.
+              example:
+                - id: "11001234567@c.us"
+                  archive: false
+                  notSpam: true
+                - id: "79001234568@c.us"
+                  archive: false
+                  notSpam: true
+                - id: "79001234569-1479621234@g.us"
+                  archive: false
+                  notSpam: true
+  /whatsapp/{idInstance}/getContactInfo:
+    get:
+      tags:
+        - Account
+      summary: Get contact information
+      description: >
+        This method retrieves detailed information about a contact, including name, avatar, email, business details, and product cards.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatId:
+                  type: string
+                  description: Correspondent id.
+              required:
+                - chatId
+            example:
+              chatId: "71234567890@c.us"
+      responses:
+        '200':
+          description: Contact information including business and product details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  avatar:
+                    type: string
+                    description: Avatar url.
+                  name:
+                    type: string
+                    description: >
+                      Contact name. If the contact is in the phone book, the name is taken from there. Otherwise, the WhatsApp profile name is used. If neither is available, the field is empty.
+                  email:
+                    type: string
+                    description: Contact e-mail.
+                  category:
+                    type: string
+                    description: Business contact category.
+                  description:
+                    type: string
+                    description: Business contact description.
+                  products:
+                    type: array
+                    description: Contact product cards.
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Product id.
+                        imageUrls:
+                          type: object
+                          properties:
+                            requested:
+                              type: string
+                              description: Requested image url.
+                            original:
+                              type: string
+                              description: Original image url.
+                        reviewStatus:
+                          type: object
+                          properties:
+                            whatsapp:
+                              type: string
+                              description: Product review status.
+                        availability:
+                          type: string
+                          description: Product availability.
+                        name:
+                          type: string
+                          description: Product name.
+                        description:
+                          type: string
+                          description: Product description.
+                        price:
+                          type: string
+                          nullable: true
+                          description: Product price.
+                        isHidden:
+                          type: boolean
+                          description: Product visibility flag.
+                  chatId:
+                    type: string
+                    description: Correspondent id.
+                  lastSeen:
+                    type: string
+                    nullable: true
+                    description: Last seen timestamp.
+                  isArchive:
+                    type: boolean
+                    description: Archive status.
+                  isDisappearing:
+                    type: boolean
+                    description: Disappearing messages status.
+                  isMute:
+                    type: boolean
+                    description: Mute status.
+                  messageExpiration:
+                    type: integer
+                    description: Message expiration time.
+                  muteExpiration:
+                    type: string
+                    nullable: true
+                    description: Mute expiration time.
+              example:
+                avatar: "https://pps.whatsapp.net/v/t61.24694-24/24_1349471992200940_2091838963901201896_n.jpg?ccb=11-4&oh=01_AVzZilQn10nj9M9cfQV4PW5dgdXOkiOuD_jCqP2MCXIpyA"
+                name: "Dealer"
+                email: "test@test.com"
+                category: "Fish ind"
+                description: "Unnoficial"
+                products:
+                  - id: "42079728151"
+                    imageUrls:
+                      requested: "https://mmg.whatsapp.net/v/t45.5328-4/263329037_6625110154227932_2879714823340281709_n.jpg?stp=dst-jpg_p100x100&ccb=1-7&_nc_sid=c48759&_nc_ohc=NKICbZlqfPMAX9077mo&_nc_ad=z-m&_nc_cid=0&_nc_ht=mmg.whatsapp.net&oh=01_AVwYzx7CckCFf8F8xIIZ5m2AGdeC8YTnLyd29"
+                      original: "https://mmg.whatsapp.net/v/t45.5328-4/263329037_6625110154227932_2879714823340281709_n.jpg?ccb=1-7&_nc_sid=c48759&_nc_ohc=NKICbZlqfPMAX9077mo&_nc_ad=z-m&_nc_cid=0&_nc_ht=mmg.whatsapp.net&oh=01_AVzn_O9azpKNRs1iPId0TQkGYk4D7HZFSQMeobvRiR"
+                    reviewStatus:
+                      whatsapp: "APPROVED"
+                    availability: "in stock"
+                    name: "Replacement"
+                    description: "From 1000 RUB"
+                    price: null
+                    isHidden: false
+                  - id: "3545870328871389"
+                    imageUrls:
+                      requested: "https://mmg.whatsapp.net/v/t45.5328-4/261250418_4513761695371199_1710541959703469822_n.jpg?stp=dst-jpg_p100x100&ccb=1-7&_nc_sid=c48759&_nc_ohc=eps8lAw2_3MAX_mWW8K&_nc_ad=z-m&_nc_cid=0&_nc_ht=mmg.whatsapp.net&oh=01_AVxT3HnbR04qKZJSOeK4d8p-noZokqly9QbpYFK-c_8kSA&oe"
+                      original: "https://mmg.whatsapp.net/v/t45.5328-4/261250418_4513761695371199_1710541959703469822_n.jpg?ccb=1-7&_nc_sid=c48759&_nc_ohc=eps8lAw2_3MAX_mWW8K&_nc_ad=z-m&_nc_cid=0&_nc_ht=mmg.whatsapp.net&oh=01_AVx2wTCmzof0BoZDmIUpD328CtpJmlvEXGdVzew&o"
+                    reviewStatus:
+                      whatsapp: "APPROVED"
+                    availability: "in stock"
+                    name: "Technical maintenance"
+                    price: null
+                    isHidden: false
+                chatId: "71234567890@c.us"
+                lastSeen: null
+                isArchive: false
+                isDisappearing: false
+                isMute: false
+                messageExpiration: 0
+                muteExpiration: null
+  /whatsapp/{idInstance}/setProfilePicture:
+    post:
+      tags:
+        - Account
+      summary: Set profile picture
+      description: >
+        This method sets a new profile picture for the account by uploading a JPEG image file.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: JPEG image file to set as the profile picture.
+              required:
+                - file
+            example:
+              file: (binary)
+      responses:
+        '200':
+          description: Indicates whether the profile picture was successfully set and provides the URL of the new picture.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  setProfilePicture:
+                    type: boolean
+                    description: Result flag for setting the profile picture.
+                  urlAvatar:
+                    type: string
+                    description: URL of the set profile picture.
+                  reason:
+                    type: string
+                    description: Reason why the picture was not set (empty if successful).
+              example:
+                setProfilePicture: true
+                urlAvatar: "https://pps.whatsapp.net/v/t61.24******-24/23**********_********23704_************77468_n.jpg?ccb=11-4&oh=**********b6ccc377d6332abad7d0bb&oe=********"
+                reason: ""
+  /whatsapp/{idInstance}/archiveChat:
+    post:
+      tags:
+        - Account
+      summary: Archive chat
+      description: >
+        This method archives a chat. Only chats with at least one incoming message can be archived.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatId:
+                  type: string
+                  description: User or group chat Id to archive.
+              required:
+                - chatId
+            example:
+              chatId: "120363043968066561@g.us"
+      responses:
+        '200':
+          description: Chat archived successfully. The response body is empty.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Empty response body.
+              example: {}
+        '400':
+          description: Cannot archive chat because the last message was not found in the chat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "ArchiveChatError: cannot archive chat cause last message not found in chat"
+  /whatsapp/{idInstance}/unarchiveChat:
+    post:
+      tags:
+        - Account
+      summary: Unarchive chat
+      description: >
+        This method unarchives a chat for the specified user or group chat Id.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatId:
+                  type: string
+                  description: User or group chat Id to unarchive.
+              required:
+                - chatId
+            example:
+              chatId: "120363043968066561@g.us"
+      responses:
+        '200':
+          description: Chat unarchived successfully. The response body is empty.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Empty response body.
+              example: {}
+        '400':
+          description: Cannot unarchive chat because the last message was not found in the chat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "ArchiveChatError: cannot archive chat cause last message not found in chat"
+  /whatsapp/{idInstance}/deleteMessage:
+    post:
+      tags:
+        - Messages
+      summary: Delete message
+      description: >
+        This method deletes a message from a chat using the specified chat and message IDs.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatId:
+                  type: string
+                  description: User or group chat Id.
+                idMessage:
+                  type: string
+                  description: ID of the message to delete.
+              required:
+                - chatId
+                - idMessage
+            example:
+              chatId: "120363043968066561@g.us"
+              idMessage: "BAE5F4886F6F2D05"
+      responses:
+        '200':
+          description: Message deleted successfully. The response body is empty.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Empty response body.
+              example: {}
+        '400':
+          description: Chat or message not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                chatNotFound:
+                  summary: Chat not found
+                  value:
+                    error: "chatId not found"
+                messageNotFound:
+                  summary: Message not found
+                  value:
+                    error: "ID message notfound"
+  /whatsapp/{idInstance}/getAvatar:
+    post:
+      tags:
+        - Account
+      summary: Get avatar
+      description: >
+        This method returns the avatar URL for a user or group chat. If the avatar is not set or the user does not have a WhatsApp account, the URL will be empty.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatId:
+                  type: string
+                  description: User or group chat Id.
+              required:
+                - chatId
+            examples:
+              userAvatar:
+                summary: Get user avatar
+                value:
+                  chatId: "11001234567@c.us"
+              groupAvatar:
+                summary: Get group chat avatar
+                value:
+                  chatId: "11001234567-1581234048@g.us"
+      responses:
+        '200':
+          description: Avatar information for the specified user or group chat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  existsWhatsapp:
+                    type: boolean
+                    description: Indicates if the WhatsApp account exists for the specified chatId.
+                  urlAvatar:
+                    type: string
+                    description: URL to the avatar image. Empty if not set or account does not exist.
+                  reason:
+                    type: string
+                    description: Reason why the avatar could not be checked (e.g., invalid chatId or timeout).
+              examples:
+                success:
+                  summary: Avatar found
+                  value:
+                    existsWhatsapp: true
+                    urlAvatar: "https://pps.whatsapp.net/v/link/to/the/image"
+                notFound:
+                  summary: No avatar or account does not exist
+                  value:
+                    existsWhatsapp: false
+                    urlAvatar: ""
+                badRequest:
+                  summary: Invalid chatId format
+                  value:
+                    existsWhatsapp: false
+                    urlAvatar: ""
+                    reason: "bad request data"
+                timeout:
+                  summary: Timeout exceeded
+                  value:
+                    existsWhatsapp: false
+                    urlAvatar: ""
+                    reason: "get avatar timeout limit exceeded"
+  /whatsapp/{idInstance}/checkWhatsapp:
+    post:
+      tags:
+        - Account
+      summary: Check WhatsApp account availability
+      description: >
+        This method checks if a WhatsApp account exists for the specified phone number.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phoneNumber:
+                  type: integer
+                  description: Recipient's phone number in international format (11 or 12 digits).
+              required:
+                - phoneNumber
+            example:
+              phoneNumber: 11001234567
+      responses:
+        '200':
+          description: Indicates whether a WhatsApp account exists for the specified phone number.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  existsWhatsapp:
+                    type: boolean
+                    description: Flag indicating WhatsApp availability for the phone number.
+              example:
+                existsWhatsapp: true
+        '400':
+          description: Invalid phone number format or timeout exceeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                invalidPhone:
+                  summary: Invalid phone number format
+                  value:
+                    error: "bad phone number, valid 11 or 12 digits"
+                timeout:
+                  summary: Timeout exceeded
+                  value:
+                    error: "check phone number timeout limit exceeded"
+  /whatsapp/{idInstance}/setProfileName:
+    post:
+      tags:
+        - Account
+      summary: Set profile name
+      description: >
+        This method sets a new profile name for the account.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: New profile name.
+              required:
+                - name
+            example:
+              name: "new name"
+      responses:
+        '200':
+          description: Profile name set successfully. The response body is empty.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Empty response body.
+              example: {}
+  /whatsapp/{idInstance}/setProfileStatus:
+    post:
+      tags:
+        - Account
+      summary: Set profile status
+      description: >
+        This method sets a new status message for the account.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idInstance
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique instance identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: New profile status.
+              required:
+                - status
+            example:
+              status: "new status"
+      responses:
+        '200':
+          description: Profile status set successfully. The response body is empty.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Empty response body.
+              example: {}
+  /api/v1/instance/user/instances/list:
+    post:
+      tags:
+        - Instances management
+      summary: Get user account instances
+      description: >
+        This method retrieves all account instances created by the user.
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XUserIdHeader'
+        - $ref: '#/components/parameters/XUserTokenHeader'
+      responses:
+        '200':
+          description: List of all account instances created by the user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+                    description: Operation result flag.
+                  error:
+                    type: object
+                    description: Error details (empty if successful).
+                  data:
+                    type: array
+                    description: List of account instances.
+                    items:
+                      type: object
+                      properties:
+                        idInstance:
+                          type: string
+                          description: Instance identifier.
+                        apiTokenInstance:
+                          type: string
+                          description: API token for the instance.
+                        typeInstance:
+                          type: string
+                          description: Messenger type for the instance.
+                        timeCreated:
+                          type: string
+                          description: Instance creation time.
+                        timeDeleted:
+                          type: string
+                          nullable: true
+                          description: Instance deletion time.
+                        deleted:
+                          type: boolean
+                          description: Indicates if the instance is deleted.
+                        tariff:
+                          type: string
+                          description: Instance tariff plan.
+                        expirationDate:
+                          type: string
+                          nullable: true
+                          description: Instance payment expiration date.
+                        isExpired:
+                          type: boolean
+                          description: Indicates if the payment is overdue.
+                        name:
+                          type: string
+                          description: Instance name.
+                        typeAccount:
+                          type: string
+                          description: Account type (WA_DESKTOP or WA_MOBILE).
+                        releaseType:
+                          type: string
+                          description: Release type (STABLE or LATEST).
+              example:
+                result: true
+                error: {}
+                data:
+                  - idInstance: "1101000000"
+                    tariff: "DEVELOPER"
+                    typeInstance: "whatsapp"
+                    deleted: false
+                    apiTokenInstance: "1f2485e80f474293b935f77d78c64e76fa4bdceb417a4998a4"
+                    expirationDate: null
+                    isExpired: false
+                    name: "Instance 1101000000"
+                    timeCreated: "2023-04-25T17:44:24"
+                    timeDeleted: "2023-04-25T17:44:20"
+                    typeAccount: "WA_DESKTOP"
+                    releaseType: "STABLE"
+                  - idInstance: "1101000001"
+                    tariff: "UNLIMITED"
+                    typeInstance: "whatsapp"
+                    deleted: false
+                    apiTokenInstance: "c8b0474542154e0ead529eb3861ca5f483c346eb00564f64a7"
+                    expirationDate: null
+                    isExpired: false
+                    name: "Mailing 1"
+                    timeCreated: "2023-03-15T19:24:28"
+                    timeDeleted: null
+                    typeAccount: "WA_DESKTOP"
+                    releaseType: "STABLE"
+                  - idInstance: "1101000002"
+                    tariff: "BUSINESS"
+                    typeInstance: "whatsapp"
+                    deleted: false
+                    apiTokenInstance: "35d8b4907f8e494289b1d5f999e3582940ceffc413bf4a76b1"
+                    expirationDate: null
+                    isExpired: false
+                    name: "Mailing 2"
+                    timeCreated: "2023-03-16T10:44:03"
+                    timeDeleted: null
+                    typeAccount: "WA_DESKTOP"
+                    releaseType: "STABLE"
+        '400':
+          description: Error retrieving instances.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+                  error:
+                    type: string
+              example:
+                result: false
+                error: "Invalid user token"
+  /api/v1/instance/user/instance/createByOrder:
+    post:
+      tags:
+        - Instances management
+      summary: Create new user instance
+      description: >
+        This method creates a new user instance with the specified tariff and period.
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XUserIdHeader'
+        - $ref: '#/components/parameters/XUserTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tariff:
+                  type: string
+                  description: Instance rate.
+                period:
+                  type: string
+                  description: Instance rate period (e.g., 'infinitely', 'month1', 'month3', 'month6', 'month12', 'day1').
+                paymentType:
+                  type: string
+                  description: Payment system type (optional, e.g., 'PAYPAL').
+              required:
+                - tariff
+                - period
+            example:
+              tariff: "DEVELOPER"
+              period: "infinitely"
+      responses:
+        '200':
+          description: Instance created successfully. Returns instance and order details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+                    description: Operation result flag.
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: Instance unique identifier.
+                      typeAccount:
+                        type: string
+                        description: Account type.
+                      releaseType:
+                        type: string
+                        description: Release type.
+                      orderDate:
+                        type: string
+                        description: Order creation date.
+                      orderNumber:
+                        type: string
+                        description: Order number.
+                      payDate:
+                        type: string
+                        nullable: true
+                        description: Payment date.
+                      paySumm:
+                        type: string
+                        description: Payment sum.
+                      payCurrency:
+                        type: string
+                        nullable: true
+                        description: Payment currency.
+                      sum:
+                        type: string
+                        description: Total sum.
+                      currency:
+                        type: string
+                        description: Currency.
+                      tariff:
+                        type: object
+                        properties:
+                          user:
+                            type: string
+                          email:
+                            type: string
+                          id:
+                            type: string
+                          caption:
+                            type: string
+                          sum:
+                            type: string
+                          currency:
+                            type: string
+                          periods:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                period:
+                                  type: string
+                          partnerId:
+                            type: string
+                          pool:
+                            type: integer
+                      period:
+                        type: string
+                        description: Selected period.
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          email:
+                            type: string
+                      idInstance:
+                        type: integer
+                        description: Instance ID.
+                      typeOrder:
+                        type: string
+                        description: Order type.
+                      paymentURL:
+                        type: string
+                        description: Payment URL.
+                      isConfirmed:
+                        type: boolean
+                        description: Confirmation flag.
+                  error:
+                    type: object
+                    description: Error details (empty if successful).
+              example:
+                result: true
+                data:
+                  id: "98343715-5729-4629-a2f5-a59a520a0826"
+                  typeAccount: "WA_DESKTOP"
+                  releaseType: "STABLE"
+                  orderDate: "2023-05-25T13:20:22"
+                  orderNumber: "00000001017"
+                  payDate: null
+                  paySumm: "0.00"
+                  payCurrency: null
+                  sum: "0.00"
+                  currency: "rub"
+                  tariff:
+                    user: "fdsg-c836-4308-a73c-gdf"
+                    email: "mail@mail.en"
+                    id: "DEVELOPER"
+                    caption: "DEVELOPER"
+                    sum: "0.00"
+                    currency: "rub"
+                    periods:
+                      - period: "infinitely"
+                    partnerId: "11010000-0000-0000-0000-000000000000"
+                    pool: 1101
+                  period: "infinitely"
+                  user:
+                    id: "a057758c-c836-4308-a73c-aaasd"
+                    email: "mail@mail.en"
+                  idInstance: 1101000871
+                  typeOrder: "CREATE_INSTANCE"
+                  paymentURL: ""
+                  isConfirmed: true
+                error: {}
+        '400':
+          description: Error creating instance.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+                  error:
+                    type: string
+              example:
+                result: false
+                error: "Invalid parameters"
+  /api/v1/instance/user/instance/extendByOrder:
+    post:
+      tags:
+        - Instances management
+      summary: Extend paid user instance
+      description: >
+        This method renews a paid user instance for the specified period and tariff.
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XUserIdHeader'
+        - $ref: '#/components/parameters/XUserTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idInstance:
+                  type: integer
+                  description: Account instance ID.
+                tariff:
+                  type: string
+                  description: Instance rate.
+                period:
+                  type: string
+                  description: Instance rate period (e.g., 'infinitely', 'month1', 'month3', 'month6', 'month12', 'day1').
+                paymentType:
+                  type: string
+                  description: Payment system type (optional, e.g., 'PAYPAL').
+              required:
+                - idInstance
+                - tariff
+                - period
+            example:
+              idInstance: 1101000001
+              tariff: "BUSINESS"
+              period: "month1"
+      responses:
+        '200':
+          description: Instance renewed successfully. Returns renewal and order details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+                    description: Operation result flag.
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: Order unique identifier.
+                      typeAccount:
+                        type: string
+                        description: Account type.
+                      releaseType:
+                        type: string
+                        description: Release type.
+                      orderDate:
+                        type: string
+                        description: Order creation date.
+                      orderNumber:
+                        type: string
+                        description: Order number.
+                      payDate:
+                        type: string
+                        nullable: true
+                        description: Payment date.
+                      paySumm:
+                        type: string
+                        description: Payment sum.
+                      payCurrency:
+                        type: string
+                        nullable: true
+                        description: Payment currency.
+                      summ:
+                        type: string
+                        description: Total sum.
+                      currency:
+                        type: string
+                        description: Currency.
+                      tariff:
+                        type: object
+                        properties:
+                          user:
+                            type: string
+                          email:
+                            type: string
+                          id:
+                            type: string
+                          caption:
+                            type: string
+                          sum:
+                            type: string
+                          currency:
+                            type: string
+                          periods:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                period:
+                                  type: string
+                          partnerId:
+                            type: string
+                          pool:
+                            type: integer
+                      period:
+                        type: string
+                        description: Selected period.
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          email:
+                            type: string
+                      idInstance:
+                        type: integer
+                        description: Instance ID.
+                      typeOrder:
+                        type: string
+                        description: Order type.
+                      paymentURL:
+                        type: string
+                        description: Payment URL.
+                      isConfirmed:
+                        type: boolean
+                        description: Confirmation flag.
+                  error:
+                    type: object
+                    description: Error details (empty if successful).
+              example:
+                result: true
+                data:
+                  id: "968b3d7e-88d3-4aac-99be-7d37303e7356"
+                  typeAccount: "WA_DESKTOP"
+                  releaseType: "STABLE"
+                  orderDate: "2023-05-25T14:00:51"
+                  orderNumber: "00000001018"
+                  payDate: null
+                  paySumm: "0.00"
+                  payCurrency: null
+                  summ: "300.00"
+                  currency: "rub"
+                  tariff:
+                    user: "a057758c-c836-4308-a73c-016316687ee8"
+                    email: "mail@mail.en"
+                    id: "BUSINESS"
+                    caption: "BUSINESS"
+                    sum: "300.00"
+                    currency: "rub"
+                    periods:
+                      - period: "month1"
+                      - period: "month3"
+                      - period: "month6"
+                      - period: "month12"
+                    partnerId: "11010000-0000-0000-0000-000000000000"
+                    pool: 1101
+                  period: "month1"
+                  user:
+                    id: "a057758c-c836-4308-a73c-ajafy"
+                    email: "mail@mail.en"
+                  idInstance: 1101000001
+                  typeOrder: "EXTEND_INSTANCE"
+                  paymentURL: ""
+                  isConfirmed: false
+                error: {}
+        '400':
+          description: Error renewing instance.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+                  error:
+                    type: string
+              example:
+                result: false
+                error: "Invalid parameters"
+  /api/v1/instance/user/instance/delete:
+    post:
+      tags:
+        - Instances management
+      summary: Delete user instance
+      description: >
+        This method deletes a user instance by its ID.
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XUserIdHeader'
+        - $ref: '#/components/parameters/XUserTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idInstance:
+                  type: integer
+                  description: Account instance ID.
+              required:
+                - idInstance
+            example:
+              idInstance: 1101000871
+      responses:
+        '200':
+          description: Instance deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+                    description: Operation result flag.
+                  data:
+                    type: object
+                    properties:
+                      deleteInstanceAccount:
+                        type: boolean
+                        description: Flag indicating if the instance was deleted.
+                  error:
+                    type: object
+                    description: Error details (empty if successful).
+              example:
+                result: true
+                data:
+                  deleteInstanceAccount: true
+                error: {}
+        '400':
+          description: Error deleting instance.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+                  error:
+                    type: string
+              example:
+                result: false
+                error: "Invalid parameters"
+  /api/v1/instance/user/instance/restore:
+    post:
+      tags:
+        - Instances management
+      summary: Restore user instance
+      description: >
+        This method restores a user instance by its ID.
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XUserIdHeader'
+        - $ref: '#/components/parameters/XUserTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idInstance:
+                  type: integer
+                  description: Account instance ID.
+              required:
+                - idInstance
+            example:
+              idInstance: 1101000871
+      responses:
+        '200':
+          description: Instance restored successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+                    description: Operation result flag.
+                  data:
+                    type: object
+                    properties:
+                      restoreInstanceAccount:
+                        type: boolean
+                        description: Flag indicating if the instance was restored.
+                  error:
+                    type: object
+                    description: Error details (empty if successful).
+              example:
+                result: true
+                data:
+                  restoreInstanceAccount: true
+                error: {}
+        '400':
+          description: Error restoring instance.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
+                  error:
+                    type: string
+              example:
+                result: false
+                error: "Invalid parameters"
